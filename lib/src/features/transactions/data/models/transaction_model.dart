@@ -1,4 +1,5 @@
 class Transaction {
+  final String? id; // Add ID field for backend operations
   final String description;
   final double amount;
   final DateTime date;
@@ -16,6 +17,7 @@ class Transaction {
   final double? longitude;
 
   Transaction({
+    this.id,
     required this.description,
     required this.amount,
     required this.date,
@@ -35,26 +37,31 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      description: json['description'],
-      amount: json['amount'],
-      date: DateTime.parse(json['date']),
-      category: json['category'],
-      type: json['type'],
-      status: json['status'],
-      paymentMethodId: json['payment_method_id'],
-      accountId: json['account_id'],
+      id: json['id']?.toString(), // Handle both string and int IDs
+      description: json['description'] ?? '',
+      amount:
+          (json['amount'] is int)
+              ? (json['amount'] as int).toDouble()
+              : (json['amount'] as double? ?? 0.0),
+      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
+      category: json['category'] ?? 'Other',
+      type: json['type'] ?? 'expense',
+      status: json['status'] ?? 'completed',
+      paymentMethodId: json['payment_method_id'] ?? '',
+      accountId: json['account_id'] ?? '',
       toAccountId: json['to_account_id'],
       notes: json['notes'],
-      isRecurring: json['is_recurring'],
+      isRecurring: json['is_recurring'] ?? false,
       recurringFrequency: json['recurring_frequency'],
       locationName: json['location_name'],
-      latitude: json['latitude'],
-      longitude: json['longitude'],
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'description': description,
       'amount': amount,
       'date': date.toIso8601String(),
