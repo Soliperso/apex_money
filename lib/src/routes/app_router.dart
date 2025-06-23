@@ -9,9 +9,6 @@ import 'package:apex_money/src/features/transactions/presentation/pages/transact
 import 'package:apex_money/src/features/transactions/data/models/transaction_model.dart';
 import 'package:apex_money/src/features/goals/presentation/pages/goals_page.dart';
 import 'package:apex_money/src/features/goals/presentation/pages/enhanced_goal_create_page.dart';
-import 'package:apex_money/src/features/goals/presentation/pages/goal_api_test_page.dart';
-import 'package:apex_money/src/features/goals/presentation/pages/goal_sync_debug_page.dart';
-import 'package:apex_money/src/features/goals/presentation/pages/quick_sync_diagnostic_page.dart';
 import 'package:apex_money/src/features/goals/data/models/goal_model.dart';
 import 'package:apex_money/src/features/groups/presentation/pages/groups_page.dart';
 import 'package:apex_money/src/features/groups/presentation/pages/group_detail_page.dart';
@@ -23,7 +20,10 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const SplashPage()),
-    GoRoute(path: '/login', builder: (context, state) => const ModernLoginPage()),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const ModernLoginPage(),
+    ),
     GoRoute(
       path: '/register',
       builder: (context, state) => const ModernRegisterPage(),
@@ -90,18 +90,6 @@ final GoRouter appRouter = GoRouter(
           (context, state) => EnhancedGoalCreatePage(
             goal: state.extra is Goal ? state.extra as Goal : null,
           ),
-    ),
-    GoRoute(
-      path: '/goal-api-test',
-      builder: (context, state) => const GoalApiTestPage(),
-    ),
-    GoRoute(
-      path: '/goal-sync-debug',
-      builder: (context, state) => const GoalSyncDebugPage(),
-    ),
-    GoRoute(
-      path: '/quick-sync-diagnostic',
-      builder: (context, state) => const QuickSyncDiagnosticPage(),
     ),
   ],
 );

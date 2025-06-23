@@ -209,8 +209,8 @@ class _CreateBillPageState extends State<CreateBillPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Create Bill'),
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -220,8 +220,8 @@ class _CreateBillPageState extends State<CreateBillPage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Create Bill'),
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
         ),
         body: const Center(
           child: Text('Group not found'),

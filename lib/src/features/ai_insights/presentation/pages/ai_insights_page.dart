@@ -4,6 +4,7 @@ import '../../../transactions/data/services/transaction_service.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../goals/data/services/goal_service.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/theme/app_spacing.dart';
 
 class AIInsightsPage extends StatefulWidget {
   const AIInsightsPage({Key? key}) : super(key: key);
@@ -41,59 +42,67 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'AI Insights',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDark ? colorScheme.onSurface : Colors.white,
-          ),
-        ),
-        backgroundColor:
-            isDark
-                ? colorScheme.surface.withValues(alpha: 0.95)
-                : colorScheme.primary.withValues(alpha: 0.95),
-        foregroundColor: isDark ? colorScheme.onSurface : Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.dashboard,
-              color: isDark ? colorScheme.onSurface : Colors.white,
-            ),
-            onPressed: () {
-              GoRouter.of(context).go('/dashboard');
-            },
-            tooltip: 'Go to Dashboard',
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.refresh,
-              color: isDark ? colorScheme.onSurface : Colors.white,
-            ),
-            onPressed: () {
-              _refreshInsights();
-            },
-            tooltip: 'Refresh Insights',
-          ),
-        ],
-      ),
       body: AppGradientBackground(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeCard(),
-              const SizedBox(height: 20),
-              _buildSpendingOverview(),
-              const SizedBox(height: 20),
-              _buildInsightsList(),
-              const SizedBox(height: 20),
-              _buildRecommendations(),
-              const SizedBox(height: 100), // Space for bottom nav
-            ],
-          ),
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: false,
+              pinned: true,
+              expandedHeight: 56,
+              backgroundColor:
+                  isDark ? colorScheme.surface : colorScheme.primary,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              forceElevated: false,
+              title: Text(
+                'AI Insights',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? colorScheme.onSurface : Colors.white,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    Icons.dashboard,
+                    color: isDark ? colorScheme.onSurface : Colors.white,
+                  ),
+                  onPressed: () {
+                    GoRouter.of(context).go('/dashboard');
+                  },
+                  tooltip: 'Go to Dashboard',
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.refresh,
+                    color: isDark ? colorScheme.onSurface : Colors.white,
+                  ),
+                  onPressed: () {
+                    _refreshInsights();
+                  },
+                  tooltip: 'Refresh Insights',
+                ),
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeCard(),
+                    const SizedBox(height: 20),
+                    _buildSpendingOverview(),
+                    const SizedBox(height: 20),
+                    _buildInsightsList(),
+                    const SizedBox(height: 20),
+                    _buildRecommendations(),
+                    const SizedBox(height: 100), // Space for bottom nav
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: Container(
@@ -189,134 +198,198 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
 
   Widget _buildWelcomeCard() {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [colorScheme.primary, colorScheme.secondary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        gradient: LinearGradient(
+          colors: isDark 
+            ? [
+                const Color(0xFF1A1B23),
+                const Color(0xFF2D1B69),
+                const Color(0xFF4527A0),
+              ]
+            : [
+                colorScheme.primary,
+                const Color(0xFF6366F1),
+                const Color(0xFF8B5CF6),
+              ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -2,
           ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'AI Financial Insights',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onPrimary,
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Powered by advanced analytics',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onPrimary.withValues(alpha: 0.9),
+                    const SizedBox(width: 12),
+                    Text(
+                      'AI Financial Insights',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Powered by advanced analytics to help you make smarter financial decisions',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.4,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(Icons.psychology, size: 48, color: colorScheme.onPrimary),
-          ],
-        ),
+          ),
+          const SizedBox(width: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.psychology,
+              size: 32,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSpendingOverview() {
     final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.analytics, color: colorScheme.primary, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Spending Analysis',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    'This Month',
-                    _isLoading
-                        ? '...'
-                        : '\$${_thisMonthSpending.toStringAsFixed(0)}',
-                    _isLoading ? '...' : _calculateMonthlyChange(),
-                    _getChangeColor(_calculateMonthlyChangeValue()),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    'Last Month',
-                    _isLoading
-                        ? '...'
-                        : '\$${_lastMonthSpending.toStringAsFixed(0)}',
-                    _isLoading
-                        ? '...'
-                        : '${_lastMonthSpending > 0 ? "Base" : "N/A"}',
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    'Avg Daily',
-                    _isLoading
-                        ? '...'
-                        : '\$${_avgDailySpending.toStringAsFixed(0)}',
-                    _isLoading ? '...' : 'Current',
-                    Colors.orange,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    'Top Category',
-                    _isLoading ? '...' : _topSpendingCategory,
-                    _isLoading
-                        ? '...'
-                        : '${_categoryPercentage.toStringAsFixed(0)}%',
-                    Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header with icon - matching other screens style
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(
+                  Icons.analytics_rounded,
+                  size: 18,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Spending Analysis',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  'This Month',
+                  _isLoading
+                      ? '...'
+                      : '\$${_thisMonthSpending.toStringAsFixed(0)}',
+                  _isLoading ? '...' : _calculateMonthlyChange(),
+                  _getChangeColor(_calculateMonthlyChangeValue()),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  'Last Month',
+                  _isLoading
+                      ? '...'
+                      : '\$${_lastMonthSpending.toStringAsFixed(0)}',
+                  _isLoading
+                      ? '...'
+                      : '${_lastMonthSpending > 0 ? "Base" : "N/A"}',
+                  _getThemeColor('success'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  'Avg Daily',
+                  _isLoading
+                      ? '...'
+                      : '\$${_avgDailySpending.toStringAsFixed(0)}',
+                  _isLoading ? '...' : 'Current',
+                  _getThemeColor('warning'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  'Top Category',
+                  _isLoading ? '...' : _topSpendingCategory,
+                  _isLoading
+                      ? '...'
+                      : '${_categoryPercentage.toStringAsFixed(0)}%',
+                  _getThemeColor('info'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -384,48 +457,71 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
 
   Widget _buildInsightsList() {
     final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
     if (_isLoading) {
-      return Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: colorScheme.surfaceContainer,
-        child: const Padding(
-          padding: EdgeInsets.all(32.0),
-          child: Center(child: CircularProgressIndicator()),
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        decoration: BoxDecoration(
+          color: theme.brightness == Brightness.dark 
+              ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+              : colorScheme.surface.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
     final insights = _generateDynamicInsights();
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.lightbulb, color: Colors.amber, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Smart Insights',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...insights.map((insight) => _buildInsightTile(insight)).toList(),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header with icon - matching other screens style
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(
+                  Icons.lightbulb_rounded,
+                  size: 18,
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Smart Insights',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...insights.map((insight) => _buildInsightTile(insight)).toList(),
+        ],
       ),
     );
   }
@@ -445,7 +541,10 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
           'description':
               'You spent ${changePercent.abs().toStringAsFixed(0)}% ${changePercent > 0 ? 'more' : 'less'} this month vs last month',
           'icon': changePercent > 0 ? Icons.trending_up : Icons.trending_down,
-          'color': changePercent > 0 ? Colors.red : Colors.green,
+          'color':
+              changePercent > 0
+                  ? _getThemeColor('error')
+                  : _getThemeColor('success'),
           'action': null,
         });
       }
@@ -463,7 +562,7 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
             'title': 'Goal Achievement!',
             'description': '$completedGoals out of $totalGoals goals completed',
             'icon': Icons.emoji_events,
-            'color': Colors.green,
+            'color': _getThemeColor('success'),
             'action': 'View Goals',
           });
         } else if (overallProgress > 0.7) {
@@ -472,7 +571,7 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
             'description':
                 '${(overallProgress * 100).toStringAsFixed(0)}% overall progress towards your goals',
             'icon': Icons.savings,
-            'color': Colors.blue,
+            'color': _getThemeColor('primary'),
             'action': 'View Goals',
           });
         } else if (overallProgress < 0.3) {
@@ -481,7 +580,7 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
             'description':
                 'Only ${(overallProgress * 100).toStringAsFixed(0)}% progress. Consider increasing savings',
             'icon': Icons.flag,
-            'color': Colors.orange,
+            'color': _getThemeColor('warning'),
             'action': 'View Goals',
           });
         }
@@ -495,7 +594,7 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
         'description':
             '${_categoryPercentage.toStringAsFixed(0)}% of spending is on $_topSpendingCategory',
         'icon': Icons.pie_chart,
-        'color': Colors.purple,
+        'color': _getThemeColor('info'),
         'action': 'View Details',
       });
     }
@@ -507,7 +606,7 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
         'description':
             'Average daily spending is \$${_avgDailySpending.toStringAsFixed(0)}',
         'icon': Icons.calendar_today,
-        'color': Colors.orange,
+        'color': _getThemeColor('warning'),
         'action': null,
       });
     }
@@ -519,7 +618,7 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
         'description':
             'Your spending patterns look stable. Keep tracking for better insights!',
         'icon': Icons.health_and_safety,
-        'color': Colors.green,
+        'color': _getThemeColor('success'),
         'action': null,
       });
     }
@@ -586,53 +685,71 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
 
   Widget _buildRecommendations() {
     final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.recommend, color: Colors.green, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'AI Recommendations',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildRecommendationCard(
-              'Save on Subscriptions',
-              'Cancel unused streaming services to save \$45/month',
-              Icons.subscriptions,
-              Colors.blue,
-            ),
-            const SizedBox(height: 12),
-            _buildRecommendationCard(
-              'Budget Alert',
-              'Set a food budget of \$400 to reduce dining expenses',
-              Icons.restaurant,
-              Colors.orange,
-            ),
-            const SizedBox(height: 12),
-            _buildRecommendationCard(
-              'Investment Opportunity',
-              'You have \$500 surplus - consider investing',
-              Icons.trending_up,
-              Colors.green,
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header with icon - matching other screens style
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(
+                  Icons.recommend_rounded,
+                  size: 18,
+                  color: colorScheme.onTertiaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'AI Recommendations',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildRecommendationCard(
+            'Save on Subscriptions',
+            'Cancel unused streaming services to save \$45/month',
+            Icons.subscriptions,
+            _getThemeColor('primary'),
+          ),
+          const SizedBox(height: 12),
+          _buildRecommendationCard(
+            'Budget Alert',
+            'Set a food budget of \$400 to reduce dining expenses',
+            Icons.restaurant,
+            _getThemeColor('warning'),
+          ),
+          const SizedBox(height: 12),
+          _buildRecommendationCard(
+            'Investment Opportunity',
+            'You have \$500 surplus - consider investing',
+            Icons.trending_up,
+            _getThemeColor('success'),
+          ),
+        ],
       ),
     );
   }
@@ -649,31 +766,26 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color:
-            isDark ? colorScheme.surface : colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-        border:
-            isDark
-                ? null
-                : Border.all(color: colorScheme.outlineVariant, width: 1),
+        color: isDark
+            ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color:
-                  isDark
-                      ? color.withValues(alpha: 0.1)
-                      : color.withValues(alpha: 0.08),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border:
-                  isDark
-                      ? null
-                      : Border.all(
-                        color: color.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
+              border: Border.all(
+                color: color.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
@@ -792,9 +904,9 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
   void _refreshInsights() {
     _loadInsightData();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Insights refreshed successfully!'),
-        backgroundColor: Colors.green,
+      SnackBar(
+        content: const Text('Insights refreshed successfully!'),
+        backgroundColor: _getThemeColor('success'),
       ),
     );
   }
@@ -814,8 +926,35 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
   }
 
   Color _getChangeColor(double changeValue) {
-    if (changeValue > 0) return Colors.red; // Increased spending = bad
-    if (changeValue < 0) return Colors.green; // Decreased spending = good
-    return Colors.grey; // No change
+    if (changeValue > 0)
+      return _getThemeColor('error'); // Increased spending = bad
+    if (changeValue < 0)
+      return _getThemeColor('success'); // Decreased spending = good
+    return _getThemeColor('neutral'); // No change
+  }
+
+  /// Get theme-aware colors that work well in both light and dark modes
+  Color _getThemeColor(String colorType) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    switch (colorType) {
+      case 'primary':
+        return colorScheme.primary;
+      case 'success':
+        return isDark ? const Color(0xFF4CAF50) : const Color(0xFF2E7D32);
+      case 'error':
+        return isDark ? const Color(0xFFFF5252) : const Color(0xFFD32F2F);
+      case 'warning':
+        return isDark ? const Color(0xFFFF9800) : const Color(0xFFE65100);
+      case 'info':
+        return isDark ? const Color(0xFF9C27B0) : const Color(0xFF7B1FA2);
+      case 'accent':
+        return isDark ? const Color(0xFFFFB300) : const Color(0xFFF57C00);
+      case 'neutral':
+        return colorScheme.onSurfaceVariant;
+      default:
+        return colorScheme.primary;
+    }
   }
 }

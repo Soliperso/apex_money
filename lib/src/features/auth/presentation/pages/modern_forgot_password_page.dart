@@ -16,12 +16,12 @@ class ModernForgotPasswordPage extends StatefulWidget {
   const ModernForgotPasswordPage({super.key, this.initialEmail});
 
   @override
-  State<ModernForgotPasswordPage> createState() => _ModernForgotPasswordPageState();
+  State<ModernForgotPasswordPage> createState() =>
+      _ModernForgotPasswordPageState();
 }
 
 class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
     with SingleTickerProviderStateMixin {
-  
   // Controllers and services
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -41,7 +41,7 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
   void initState() {
     super.initState();
     _initializeAnimations();
-    
+
     // Set initial email if provided
     if (widget.initialEmail != null) {
       _emailController.text = widget.initialEmail!;
@@ -60,23 +60,18 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
       duration: AppDuration.medium,
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+
     _animationController.forward();
   }
 
@@ -156,59 +151,87 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
-    return Scaffold(
-      body: AppGradientBackground(
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 
-                               MediaQuery.of(context).padding.top - 
-                               MediaQuery.of(context).padding.bottom - 
-                               (AppSpacing.screenPadding * 2),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Theme toggle and back button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            onPressed: () => GoRouter.of(context).pop(),
-                            icon: const Icon(Icons.arrow_back),
-                            tooltip: 'Back',
-                          ),
-                          
-                          IconButton(
-                            onPressed: themeProvider.toggleTheme,
-                            icon: Icon(themeProvider.themeModeIcon),
-                            tooltip: 'Switch to ${themeProvider.isDarkMode ? 'light' : 'dark'} mode',
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: AppSpacing.lg),
-                      
-                      // Header
-                      _buildHeader(theme),
-                      
-                      const SizedBox(height: AppSpacing.huge),
-                      
-                      // Main content
-                      _emailSent ? _buildSuccessCard(theme) : _buildResetForm(theme),
-                      
-                      const SizedBox(height: AppSpacing.xxl),
-                      
-                      // Back to login link
-                      _buildBackToLoginLink(theme),
-                    ],
+
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside input fields
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        body: AppGradientBackground(
+          child: SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          MediaQuery.of(context).size.height -
+                          MediaQuery.of(context).padding.top -
+                          MediaQuery.of(context).padding.bottom -
+                          (AppSpacing.screenPadding * 2),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Theme toggle and back button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                try {
+                                  if (GoRouter.of(context).canPop()) {
+                                    GoRouter.of(context).pop();
+                                  } else {
+                                    // If there's nothing to pop, navigate to login
+                                    GoRouter.of(context).go('/login');
+                                  }
+                                } catch (e) {
+                                  // Fallback: always navigate to login if there's an error
+                                  GoRouter.of(context).go('/login');
+                                }
+                              },
+                              icon: Icon(
+                                Icons.arrow_back,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              tooltip: 'Back',
+                            ),
+
+                            IconButton(
+                              onPressed: themeProvider.toggleTheme,
+                              icon: Icon(
+                                themeProvider.themeModeIcon,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              tooltip:
+                                  'Switch to ${themeProvider.isDarkMode ? 'light' : 'dark'} mode',
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Header
+                        _buildHeader(theme),
+
+                        const SizedBox(height: AppSpacing.huge),
+
+                        // Main content
+                        _emailSent
+                            ? _buildSuccessCard(theme)
+                            : _buildResetForm(theme),
+
+                        const SizedBox(height: AppSpacing.xxl),
+
+                        // Back to login link
+                        _buildBackToLoginLink(theme),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -236,7 +259,9 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
             ],
           ),
           child: Icon(
-            _emailSent ? Icons.mark_email_read_rounded : Icons.lock_reset_rounded,
+            _emailSent
+                ? Icons.mark_email_read_rounded
+                : Icons.lock_reset_rounded,
             size: 48,
             color: theme.colorScheme.onPrimaryContainer,
           ),
@@ -251,9 +276,9 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          _emailSent 
-            ? 'We\'ve sent password reset instructions to your email'
-            : 'Enter your email address and we\'ll send you reset instructions',
+          _emailSent
+              ? 'We\'ve sent password reset instructions to your email'
+              : 'Enter your email address and we\'ll send you reset instructions',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -272,7 +297,7 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
           children: [
             // Error message
             if (_errorMessage != null) _buildErrorMessage(theme),
-            
+
             // Email field
             TextFormField(
               controller: _emailController,
@@ -287,22 +312,26 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
                 prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Send reset email button
             ElevatedButton(
-              onPressed: _isLoading ? null : () {
-                HapticFeedback.lightImpact();
-                _sendResetEmail();
-              },
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Send Reset Instructions'),
+              onPressed:
+                  _isLoading
+                      ? null
+                      : () {
+                        HapticFeedback.lightImpact();
+                        _sendResetEmail();
+                      },
+              child:
+                  _isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text('Send Reset Instructions'),
             ),
           ],
         ),
@@ -326,9 +355,9 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
               color: AppTheme.successColor,
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.lg),
-          
+
           Text(
             'Email Sent Successfully!',
             style: theme.textTheme.titleLarge?.copyWith(
@@ -336,18 +365,18 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
               color: AppTheme.successColor,
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.sm),
-          
+
           Text(
             'We\'ve sent password reset instructions to:',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.xs),
-          
+
           Text(
             _emailController.text,
             style: theme.textTheme.bodyLarge?.copyWith(
@@ -355,9 +384,9 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
               color: theme.colorScheme.primary,
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.lg),
-          
+
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
@@ -382,19 +411,20 @@ class _ModernForgotPasswordPageState extends State<ModernForgotPasswordPage>
               ],
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.xxl),
-          
+
           // Resend button
           OutlinedButton(
             onPressed: _isLoading ? null : _resendEmail,
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Resend Email'),
+            child:
+                _isLoading
+                    ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Text('Resend Email'),
           ),
         ],
       ),

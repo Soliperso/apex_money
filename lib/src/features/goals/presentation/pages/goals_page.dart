@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../data/services/goal_service.dart';
 import '../../data/models/goal_model.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/theme/app_spacing.dart';
+import '../../../../shared/theme/theme_provider.dart';
+import '../../../../shared/theme/app_theme.dart';
 
 class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
@@ -58,7 +63,9 @@ class _GoalsPageState extends State<GoalsPage> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
                 child: const Text('Delete'),
               ),
             ],
@@ -103,7 +110,9 @@ class _GoalsPageState extends State<GoalsPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Current: ${CurrencyFormatter.format(goal.currentAmount)}'),
+                Text(
+                  'Current: ${CurrencyFormatter.format(goal.currentAmount)}',
+                ),
                 Text('Target: ${CurrencyFormatter.format(goal.targetAmount)}'),
                 const SizedBox(height: 16),
                 TextField(
@@ -135,7 +144,8 @@ class _GoalsPageState extends State<GoalsPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Goal progress updated!'),
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
                           ),
                         );
                       }
@@ -144,7 +154,8 @@ class _GoalsPageState extends State<GoalsPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Failed to update progress: $e'),
-                            backgroundColor: Theme.of(context).colorScheme.error,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
                           ),
                         );
                       }
@@ -160,321 +171,271 @@ class _GoalsPageState extends State<GoalsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Goals',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.onSurface
-                : Colors.white,
-          ),
-        ),
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.95)
-            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.95),
-        foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).colorScheme.onSurfaceVariant
-            : Colors.white.withValues(alpha: 0.9),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.95)
-                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.95),
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.2),
-                width: 0.5,
-              ),
-            ),
-          ),
-        ),
-        leading: IconButton(
-          onPressed: () => context.go('/dashboard'),
-          icon: const Icon(Icons.arrow_back),
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.onSurfaceVariant
-              : Colors.white,
-        ),
-        actions: [
-          IconButton(
-            onPressed: _loadGoals, 
-            icon: const Icon(Icons.refresh),
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.onSurfaceVariant
-                : Colors.white,
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'test_api') {
-                context.go('/goal-api-test');
-              } else if (value == 'create_goal') {
-                context.go('/create-goal');
-              } else if (value == 'debug_sync') {
-                context.go('/goal-sync-debug');
-              } else if (value == 'quick_diagnostic') {
-                context.go('/quick-sync-diagnostic');
-              }
-            },
-            itemBuilder:
-                (BuildContext context) => [
-                  PopupMenuItem<String>(
-                    value: 'create_goal',
-                    child: Row(
-                      children: [
-                        Icon(Icons.flag_outlined, color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(width: 8),
-                        const Text('Create Goal'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'quick_diagnostic',
-                    child: Row(
-                      children: [
-                        Icon(Icons.medical_services, color: Theme.of(context).colorScheme.error),
-                        const SizedBox(width: 8),
-                        const Text('Quick Diagnostic'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'debug_sync',
-                    child: Row(
-                      children: [
-                        Icon(Icons.bug_report, color: Theme.of(context).colorScheme.tertiary),
-                        const SizedBox(width: 8),
-                        const Text('Debug Sync'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'test_api',
-                    child: Row(
-                      children: [
-                        Icon(Icons.api, color: Theme.of(context).colorScheme.secondary),
-                        const SizedBox(width: 8),
-                        const Text('Test API'),
-                      ],
-                    ),
-                  ),
-                ],
-            icon: Icon(
-              Icons.more_vert,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.onSurfaceVariant
-                  : Colors.white,
-            ),
-          ),
-        ],
-      ),
       body: AppGradientBackground(
-        child: Column(
-          children: [
-            // Statistics Card
-            if (_statistics != null) _buildStatisticsCard(),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            _loadGoals();
+          },
+          child: CustomScrollView(
+            slivers: [
+              // Modern App Bar
+              _buildSliverAppBar(theme, themeProvider),
 
-            // Goals List
-            Expanded(
-              child: FutureBuilder<List<Goal>>(
-                future: _goalsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    );
-                  }
+              // Goals Content
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Statistics Card
+                    if (_statistics != null) _buildStatisticsCard(),
 
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: Colors.red.withValues(alpha: 0.6),
-                            size: 64,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Error loading goals',
-                            style: TextStyle(
-                              color: Colors.red.withValues(alpha: 0.6),
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            snapshot.error.toString(),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.outline,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _loadGoals,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                    const SizedBox(height: AppSpacing.lg),
 
-                  final goals = snapshot.data ?? [];
+                    // Goals List
+                    _buildGoalsList(),
 
-                  if (goals.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.flag_outlined,
-                            color: Theme.of(context).colorScheme.outline,
-                            size: 64,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No Goals Yet',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Create your first financial goal to start saving!\nTap the + button above to get started.',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: goals.length,
-                    itemBuilder: (context, index) {
-                      final goal = goals[index];
-                      return _buildGoalCard(goal);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          GoRouter.of(context).go('/create-goal');
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        shape: const CircleBorder(),
-        child: Icon(Icons.flag_outlined, color: Theme.of(context).colorScheme.onPrimary),
-        tooltip: 'Create Goal',
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-              spreadRadius: 0,
-              blurRadius: 16,
-              offset: const Offset(0, -4),
-            ),
-          ],
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 1,
-            ),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-          child: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            currentIndex: 2,
-            selectedItemColor: const Color(0xFF64B5F6),
-            unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedFontSize: 12,
-            unselectedFontSize: 11,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              height: 1.2,
-            ),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard_rounded),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet_rounded),
-                label: 'Transactions',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.flag_rounded),
-                label: 'Goals',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.group_rounded),
-                label: 'Groups',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.insights_rounded),
-                label: 'AI Insights',
+                    const SizedBox(
+                      height: AppSpacing.massive,
+                    ), // Extra space for bottom navigation
+                  ]),
+                ),
               ),
             ],
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  context.go('/dashboard');
-                  break;
-                case 1:
-                  context.go('/transactions');
-                  break;
-                case 2:
-                  // Already on goals page
-                  break;
-                case 3:
-                  context.go('/groups');
-                  break;
-                case 4:
-                  context.go('/ai-insights');
-                  break;
-              }
-            },
           ),
         ),
       ),
+
+      // Modern Bottom Navigation
+      bottomNavigationBar: _buildBottomNavigation(theme),
+
+      // Modern FAB
+      floatingActionButton: _buildFloatingActionButton(theme),
+      floatingActionButtonLocation:
+          const _CustomCenterFloatingActionButtonLocation(),
+    );
+  }
+
+  Widget _buildSliverAppBar(ThemeData theme, ThemeProvider themeProvider) {
+    final appBarColor =
+        theme.brightness == Brightness.dark
+            ? theme.colorScheme.surface
+            : theme.colorScheme.primary;
+
+    final titleColor =
+        theme.brightness == Brightness.dark
+            ? theme.colorScheme.onSurface
+            : Colors.white;
+
+    final iconColor =
+        theme.brightness == Brightness.dark
+            ? theme.colorScheme.onSurfaceVariant
+            : Colors.white.withValues(alpha: 0.9);
+
+    return SliverAppBar(
+      floating: false,
+      pinned: true,
+      expandedHeight: 56,
+      backgroundColor: appBarColor,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shadowColor: theme.colorScheme.shadow,
+      forceElevated: false,
+      systemOverlayStyle:
+          theme.brightness == Brightness.dark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.light,
+      flexibleSpace: Container(decoration: BoxDecoration(color: appBarColor)),
+      title: Text(
+        'Goals',
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: titleColor,
+        ),
+      ),
+      actions: [
+        // Theme toggle
+        IconButton(
+          onPressed: themeProvider.toggleTheme,
+          icon: Icon(themeProvider.themeModeIcon),
+          tooltip: 'Switch theme',
+          color: iconColor,
+        ),
+
+        // Refresh
+        IconButton(
+          onPressed: _loadGoals,
+          icon: const Icon(Icons.refresh),
+          color: iconColor,
+          tooltip: 'Refresh Goals',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGoalsList() {
+    return FutureBuilder<List<Goal>>(
+      future: _goalsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
+                const SizedBox(height: 16),
+                Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(color: AppTheme.errorColor),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _loadGoals,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                  : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.flag_outlined,
+                  size: 48,
+                  color: Colors.grey.withValues(alpha: 0.4),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'No goals yet',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Create your first goal to get started',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              return _buildGoalCard(snapshot.data![index]);
+            },
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildBottomNavigation(ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(AppSpacing.radiusXl),
+          topRight: Radius.circular(AppSpacing.radiusXl),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(AppSpacing.radiusXl),
+          topRight: Radius.circular(AppSpacing.radiusXl),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: 2,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_rounded),
+              label: 'Dashboard',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet_rounded),
+              label: 'Transactions',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.flag_rounded),
+              label: 'Goals',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.group_rounded),
+              label: 'Groups',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.insights_rounded),
+              label: 'AI Insights',
+            ),
+          ],
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                context.go('/dashboard');
+                break;
+              case 1:
+                context.go('/transactions');
+                break;
+              case 2:
+                // Already on goals page
+                break;
+              case 3:
+                context.go('/groups');
+                break;
+              case 4:
+                context.go('/ai-insights');
+                break;
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton(ThemeData theme) {
+    return FloatingActionButton(
+      onPressed: () => context.go('/create-goal'),
+      tooltip: 'Create Goal',
+      child: const Icon(Icons.flag),
     );
   }
 
@@ -483,23 +444,21 @@ class _GoalsPageState extends State<GoalsPage> {
     final stats = _statistics!;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.3)
-            : theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Goal Overview',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           Row(
@@ -517,7 +476,7 @@ class _GoalsPageState extends State<GoalsPage> {
                   'Completed',
                   stats['completedGoals'].toString(),
                   Icons.check_circle,
-                  Colors.green,
+                  AppTheme.successColor,
                 ),
               ),
             ],
@@ -547,9 +506,14 @@ class _GoalsPageState extends State<GoalsPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                  : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6),
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1)
+                      : Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -557,7 +521,10 @@ class _GoalsPageState extends State<GoalsPage> {
               children: [
                 Text(
                   'Total Progress',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
                 Text(
                   '${(stats['overallProgress'] * 100).toStringAsFixed(1)}%',
@@ -588,9 +555,10 @@ class _GoalsPageState extends State<GoalsPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? color.withValues(alpha: 0.1)
-                  : color.withValues(alpha: 0.2),
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? color.withValues(alpha: 0.1)
+                      : color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 16),
@@ -609,7 +577,10 @@ class _GoalsPageState extends State<GoalsPage> {
               ),
               Text(
                 label,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -621,30 +592,22 @@ class _GoalsPageState extends State<GoalsPage> {
   Widget _buildGoalCard(Goal goal) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.3)
-            : theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color:
               goal.isCompleted
-                  ? (Theme.of(context).brightness == Brightness.dark
-                      ? Colors.green.withValues(alpha: 0.3)
-                      : Colors.green.withValues(alpha: 0.5))
+                  ? Colors.green.withValues(alpha: 0.3)
                   : goal.isOverdue
-                  ? (Theme.of(context).brightness == Brightness.dark
-                      ? Colors.red.withValues(alpha: 0.3)
-                      : Colors.red.withValues(alpha: 0.5))
-                  : (Theme.of(context).brightness == Brightness.dark
-                      ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                      : theme.colorScheme.primary.withValues(alpha: 0.4)),
-          width: 1.5,
+                  ? AppTheme.errorColor.withValues(alpha: 0.3)
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -664,19 +627,17 @@ class _GoalsPageState extends State<GoalsPage> {
                 if (goal.isCompleted)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.green.withValues(alpha: 0.1)
-                          : Colors.green.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppTheme.successColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: const Text(
                       'Completed',
                       style: TextStyle(
-                        color: Colors.green,
+                        color: AppTheme.successColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -732,7 +693,10 @@ class _GoalsPageState extends State<GoalsPage> {
                           ),
                         ),
                       ],
-                  child: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  child: Icon(
+                    Icons.more_vert,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -741,18 +705,18 @@ class _GoalsPageState extends State<GoalsPage> {
 
             // Progress Bar
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
               child: LinearProgressIndicator(
                 value: goal.progressPercentage,
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)
-                    : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                backgroundColor: theme.colorScheme.outlineVariant.withValues(
+                  alpha: 0.3,
+                ),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   goal.isCompleted
-                      ? Colors.green
+                      ? AppTheme.successColor
                       : goal.isOverdue
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.primary,
+                      ? AppTheme.errorColor
+                      : theme.colorScheme.primary,
                 ),
                 minHeight: 8,
               ),
@@ -769,7 +733,10 @@ class _GoalsPageState extends State<GoalsPage> {
                   children: [
                     Text(
                       'Current',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                     Text(
                       CurrencyFormatter.format(goal.currentAmount),
@@ -786,7 +753,10 @@ class _GoalsPageState extends State<GoalsPage> {
                   children: [
                     Text(
                       'Progress',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                     Text(
                       '${(goal.progressPercentage * 100).toStringAsFixed(1)}%',
@@ -795,8 +765,8 @@ class _GoalsPageState extends State<GoalsPage> {
                             goal.isCompleted
                                 ? Colors.green
                                 : goal.isOverdue
-                                ? Colors.red
-                                : Theme.of(context).colorScheme.primary,
+                                ? AppTheme.errorColor
+                                : theme.colorScheme.primary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -808,7 +778,10 @@ class _GoalsPageState extends State<GoalsPage> {
                   children: [
                     Text(
                       'Target',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                     Text(
                       CurrencyFormatter.format(goal.targetAmount),
@@ -827,32 +800,34 @@ class _GoalsPageState extends State<GoalsPage> {
             if (goal.deadline != null) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color:
                       goal.isOverdue
-                          ? (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.red.withValues(alpha: 0.1)
-                              : Colors.red.withValues(alpha: 0.2))
-                          : (Theme.of(context).brightness == Brightness.dark
-                              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                              : Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6)),
-                  borderRadius: BorderRadius.circular(6),
+                          ? AppTheme.errorColor.withValues(alpha: 0.1)
+                          : theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       goal.isOverdue ? Icons.warning : Icons.schedule,
-                      color: goal.isOverdue ? Colors.red : Theme.of(context).colorScheme.primary,
+                      color:
+                          goal.isOverdue
+                              ? AppTheme.errorColor
+                              : theme.colorScheme.primary,
                       size: 16,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       goal.isOverdue
                           ? 'Overdue'
                           : '${goal.daysRemaining} days remaining',
                       style: TextStyle(
-                        color: goal.isOverdue ? Colors.red : Theme.of(context).colorScheme.primary,
+                        color:
+                            goal.isOverdue
+                                ? AppTheme.errorColor
+                                : theme.colorScheme.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -866,17 +841,15 @@ class _GoalsPageState extends State<GoalsPage> {
             if (goal.linkedCategories.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.green.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.link, color: Colors.green, size: 16),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -906,12 +879,10 @@ class _GoalsPageState extends State<GoalsPage> {
             ] else if (goal.autoUpdate) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.orange.withValues(alpha: 0.1)
-                      : Colors.orange.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Row(
                   children: [
@@ -920,7 +891,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       color: Colors.orange,
                       size: 16,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         'No categories linked - add income to categories to auto-update',
@@ -938,5 +909,21 @@ class _GoalsPageState extends State<GoalsPage> {
         ),
       ),
     );
+  }
+}
+
+/// Custom FloatingActionButtonLocation that positions the FAB slightly above center docked
+class _CustomCenterFloatingActionButtonLocation
+    extends FloatingActionButtonLocation {
+  const _CustomCenterFloatingActionButtonLocation();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    // Get the center docked position
+    final Offset centerDocked = FloatingActionButtonLocation.centerDocked
+        .getOffset(scaffoldGeometry);
+
+    // Move it up by 16 pixels to clear the bottom navigation
+    return Offset(centerDocked.dx, centerDocked.dy - 16);
   }
 }

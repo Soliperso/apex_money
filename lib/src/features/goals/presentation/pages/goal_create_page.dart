@@ -165,36 +165,48 @@ class _GoalCreatePageState extends State<GoalCreatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isEditMode ? 'Edit Goal' : 'Create Goal',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => context.go('/goals'),
-          icon: const Icon(Icons.arrow_back),
-        ),
-      ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.surface],
+            colors: [theme.colorScheme.primary, theme.colorScheme.surface],
             stops: [0.0, 0.3],
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              floating: false,
+              pinned: true,
+              expandedHeight: 56,
+              backgroundColor: theme.colorScheme.primary,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              forceElevated: false,
+              title: Text(
+                _isEditMode ? 'Edit Goal' : 'Create Goal',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              leading: IconButton(
+                onPressed: () => context.go('/goals'),
+                icon: const Icon(Icons.arrow_back),
+                color: Colors.white,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                 // Error Message
                 if (_errorMessage != null) ...[
                   Container(
@@ -566,7 +578,13 @@ class _GoalCreatePageState extends State<GoalCreatePage> {
               ),
             ],
           ),
-        ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

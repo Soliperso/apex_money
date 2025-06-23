@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/groups_provider.dart';
 import '../../data/models/models.dart';
+import '../../../../shared/theme/app_spacing.dart';
 
 class GroupInvitationsBanner extends StatelessWidget {
   const GroupInvitationsBanner({Key? key}) : super(key: key);
@@ -16,78 +17,101 @@ class GroupInvitationsBanner extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
+        final theme = Theme.of(context);
+
         return Container(
           width: double.infinity,
-          margin: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color:
-                Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer.withValues(alpha: 0.3)
-                    : Theme.of(
-                      context,
-                    ).colorScheme.surface.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(16),
+            color: theme.brightness == Brightness.dark 
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.3),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
-            boxShadow:
-                Theme.of(context).brightness == Brightness.dark
-                    ? null
-                    : [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.shadow.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Section Header with icon - matching Settings/Info tab style
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    Icons.mail,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Icon(
+                          Icons.mail_rounded,
+                          size: 18,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Group Invitations',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                  TextButton(
+                    onPressed: () => _showInvitationsDialog(context, pendingInvitations),
                     child: Text(
-                      '${pendingInvitations.length} Group Invitation${pendingInvitations.length != 1 ? 's' : ''}',
+                      'View All',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 16,
+                        color: theme.brightness == Brightness.dark 
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.primary.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed:
-                        () =>
-                            _showInvitationsDialog(context, pendingInvitations),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('View All'),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+
+              // Invitation count indicator
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                      : theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(
+                    color: theme.brightness == Brightness.dark
+                        ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                        : theme.colorScheme.primary.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  '${pendingInvitations.length} pending invitation${pendingInvitations.length != 1 ? 's' : ''}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.brightness == Brightness.dark
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
 
               // Show first invitation as preview
               if (pendingInvitations.isNotEmpty)
@@ -106,10 +130,16 @@ class GroupInvitationsBanner extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
@@ -185,8 +215,8 @@ class GroupInvitationsBanner extends StatelessWidget {
             title: const Text('Group Invitations'),
             contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
             content: SizedBox(
-              width: double.maxFinite,
-              height: 350,
+              width: MediaQuery.of(context).size.width * 0.9,
+              height: 400,
               child: Column(
                 children: [
                   Expanded(
@@ -195,16 +225,20 @@ class GroupInvitationsBanner extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final invitation = invitations[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          elevation: 2,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.8)
+                              : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
                                     CircleAvatar(
-                                      radius: 20,
+                                      radius: 24,
                                       backgroundColor:
                                           Theme.of(
                                             context,
@@ -224,7 +258,7 @@ class GroupInvitationsBanner extends StatelessWidget {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -235,11 +269,12 @@ class GroupInvitationsBanner extends StatelessWidget {
                                                 'Unknown Group',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                              fontSize: 18,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
+                                          const SizedBox(height: 4),
                                           Text(
                                             'Invited by ${invitation.inviterName ?? 'Unknown'}',
                                             style:
@@ -256,28 +291,27 @@ class GroupInvitationsBanner extends StatelessWidget {
                                 ),
 
                                 if (invitation.message?.isNotEmpty == true) ...[
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 12),
                                   Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.all(8),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.surfaceContainerHighest,
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                                          : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       invitation.message!,
                                       style:
-                                          Theme.of(context).textTheme.bodySmall,
+                                          Theme.of(context).textTheme.bodyMedium,
                                       maxLines: 3,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
 
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 16),
 
                                 // Expiry date and buttons in separate rows for better layout
                                 Text(

@@ -99,39 +99,40 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
           const SizedBox(height: 16),
 
-          // Group Name
-          _buildSettingItem(
-            'Group Name',
-            widget.group.group.name,
-            Icons.group,
-            onTap: isAdmin ? () => _editGroupName(context) : null,
-            showEdit: isAdmin,
-          ),
+            // Group Name
+            _buildSettingItem(
+              'Group Name',
+              widget.group.group.name,
+              Icons.group,
+              onTap: isAdmin ? () => _editGroupName(context) : null,
+              showEdit: isAdmin,
+            ),
 
-          const Divider(height: 24),
+            const Divider(height: 24),
 
-          // Description
-          _buildSettingItem(
-            'Description',
-            widget.group.group.description?.isNotEmpty == true
-                ? widget.group.group.description!
-                : 'No description',
-            Icons.description,
-            onTap: isAdmin ? () => _editDescription(context) : null,
-            showEdit: isAdmin,
-          ),
+            // Description
+            _buildSettingItem(
+              'Description',
+              widget.group.group.description?.isNotEmpty == true
+                  ? widget.group.group.description!
+                  : 'No description',
+              Icons.description,
+              onTap: isAdmin ? () => _editDescription(context) : null,
+              showEdit: isAdmin,
+            ),
 
-          const Divider(height: 24),
+            const Divider(height: 24),
 
-          // Default Currency
-          _buildSettingItem(
-            'Default Currency',
-            widget.group.settings?.defaultCurrency ?? 'USD',
-            Icons.currency_exchange,
-            onTap: isAdmin ? () => _editCurrency(context) : null,
-            showEdit: isAdmin,
-          ),
-        ],
+            // Default Currency
+            _buildSettingItem(
+              'Default Currency',
+              widget.group.settings?.defaultCurrency ?? 'USD',
+              Icons.currency_exchange,
+              onTap: isAdmin ? () => _editCurrency(context) : null,
+              showEdit: isAdmin,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -185,40 +186,41 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
           const SizedBox(height: 16),
 
-          // Allow Member Invites
-          _buildSwitchSetting(
-            'Allow members to invite others',
-            'When enabled, any member can send invitations',
-            widget.group.group.allowMemberInvites,
-            Icons.person_add,
-            onChanged:
-                isAdmin ? (value) => _updateInvitePermission(value) : null,
-          ),
+            // Allow Member Invites
+            _buildSwitchSetting(
+              'Allow members to invite others',
+              'When enabled, any member can send invitations',
+              widget.group.group.allowMemberInvites,
+              Icons.person_add,
+              onChanged:
+                  isAdmin ? (value) => _updateInvitePermission(value) : null,
+            ),
 
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
 
-          // Future: Allow Member Create Bills
-          _buildSwitchSetting(
-            'Allow members to create bills',
-            'When enabled, any member can create and manage bills',
-            widget.group.settings?.allowMemberCreateBills ?? true,
-            Icons.receipt_long,
-            onChanged: null, // Disabled for now - future feature
-            isComingSoon: true,
-          ),
+            // Future: Allow Member Create Bills
+            _buildSwitchSetting(
+              'Allow members to create bills',
+              'When enabled, any member can create and manage bills',
+              widget.group.settings?.allowMemberCreateBills ?? true,
+              Icons.receipt_long,
+              onChanged: null, // Disabled for now - future feature
+              isComingSoon: true,
+            ),
 
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
 
-          // Future: Require Admin Approval
-          _buildSwitchSetting(
-            'Require admin approval for new members',
-            'New members must be approved by an admin before joining',
-            widget.group.settings?.requireAdminApproval ?? false,
-            Icons.admin_panel_settings,
-            onChanged: null, // Disabled for now - future feature
-            isComingSoon: true,
-          ),
-        ],
+            // Future: Require Admin Approval
+            _buildSwitchSetting(
+              'Require admin approval for new members',
+              'New members must be approved by an admin before joining',
+              widget.group.settings?.requireAdminApproval ?? false,
+              Icons.admin_panel_settings,
+              onChanged: null, // Disabled for now - future feature
+              isComingSoon: true,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -270,40 +272,41 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
             ],
           ),
 
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-          Text(
-            'These settings will be available when bill sharing is implemented',
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
+            Text(
+              'These settings will be available when bill sharing is implemented',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
 
-          // Default Split Method
-          _buildSettingItem(
-            'Default split method',
-            widget.group.settings?.defaultSplitMethod ?? 'equal',
-            Icons.pie_chart,
-            onTap: null,
-            isComingSoon: true,
-          ),
+            // Default Split Method
+            _buildSettingItem(
+              'Default split method',
+              widget.group.settings?.defaultSplitMethod ?? 'equal',
+              Icons.pie_chart,
+              onTap: null,
+              isComingSoon: true,
+            ),
 
-          const Divider(height: 24),
+            const Divider(height: 24),
 
-          // Auto Calculate Settlements
-          _buildSwitchSetting(
-            'Auto-calculate settlements',
-            'Automatically suggest optimal payment settlements',
-            widget.group.settings?.autoCalculateSettlements ?? true,
-            Icons.calculate,
-            onChanged: null,
-            isComingSoon: true,
-          ),
-        ],
+            // Auto Calculate Settlements
+            _buildSwitchSetting(
+              'Auto-calculate settlements',
+              'Automatically suggest optimal payment settlements',
+              widget.group.settings?.autoCalculateSettlements ?? true,
+              Icons.calculate,
+              onChanged: null,
+              isComingSoon: true,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -355,26 +358,27 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
           const SizedBox(height: 16),
 
-          // Transfer Admin
-          _buildDangerAction(
-            'Transfer Admin Role',
-            'Transfer admin privileges to another member',
-            Icons.admin_panel_settings,
-            Colors.orange,
-            () => _transferAdmin(context),
-          ),
+            // Transfer Admin
+            _buildDangerAction(
+              'Transfer Admin Role',
+              'Transfer admin privileges to another member',
+              Icons.admin_panel_settings,
+              Colors.orange,
+              () => _transferAdmin(context),
+            ),
 
-          const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
 
-          // Delete Group
-          _buildDangerAction(
-            'Delete Group',
-            'Permanently delete this group and all associated data',
-            Icons.delete_forever,
-            Colors.red,
-            () => _deleteGroup(context),
-          ),
-        ],
+            // Delete Group
+            _buildDangerAction(
+              'Delete Group',
+              'Permanently delete this group and all associated data',
+              Icons.delete_forever,
+              Colors.red,
+              () => _deleteGroup(context),
+            ),
+          ],
+        ),
       ),
     );
   }

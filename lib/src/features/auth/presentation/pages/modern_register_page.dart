@@ -21,12 +21,12 @@ class ModernRegisterPage extends StatefulWidget {
 
 class _ModernRegisterPageState extends State<ModernRegisterPage>
     with SingleTickerProviderStateMixin {
-  
   // Controllers and services
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
 
@@ -65,23 +65,18 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
       duration: AppDuration.medium,
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+
     _animationController.forward();
   }
 
@@ -93,19 +88,19 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
 
   PasswordStrength _calculatePasswordStrength(String password) {
     if (password.isEmpty) return PasswordStrength.none;
-    
+
     int score = 0;
-    
+
     // Length check
     if (password.length >= 8) score++;
     if (password.length >= 12) score++;
-    
+
     // Character variety checks
     if (password.contains(RegExp(r'[a-z]'))) score++;
     if (password.contains(RegExp(r'[A-Z]'))) score++;
     if (password.contains(RegExp(r'[0-9]'))) score++;
     if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) score++;
-    
+
     // Return strength based on score
     if (score < 2) return PasswordStrength.weak;
     if (score < 4) return PasswordStrength.medium;
@@ -160,7 +155,7 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (!_acceptTerms) {
       setState(() {
         _errorMessage = 'Please accept the terms and conditions to continue.';
@@ -279,62 +274,86 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
-    return Scaffold(
-      body: AppGradientBackground(
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 
-                               MediaQuery.of(context).padding.top - 
-                               MediaQuery.of(context).padding.bottom - 
-                               (AppSpacing.screenPadding * 2),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Theme toggle and back button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (GoRouter.of(context).canPop())
+
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside input fields
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        body: AppGradientBackground(
+          child: SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          MediaQuery.of(context).size.height -
+                          MediaQuery.of(context).padding.top -
+                          MediaQuery.of(context).padding.bottom -
+                          (AppSpacing.screenPadding * 2),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Theme toggle and back button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (GoRouter.of(context).canPop())
+                              IconButton(
+                                onPressed: () {
+                                  try {
+                                    if (GoRouter.of(context).canPop()) {
+                                      GoRouter.of(context).pop();
+                                    } else {
+                                      GoRouter.of(context).go('/login');
+                                    }
+                                  } catch (e) {
+                                    GoRouter.of(context).go('/login');
+                                  }
+                                },
+                                icon: Icon(
+                                  Icons.arrow_back,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                                tooltip: 'Back',
+                              )
+                            else
+                              const SizedBox(width: 48),
+
                             IconButton(
-                              onPressed: () => GoRouter.of(context).pop(),
-                              icon: const Icon(Icons.arrow_back),
-                              tooltip: 'Back',
-                            )
-                          else
-                            const SizedBox(width: 48),
-                          
-                          IconButton(
-                            onPressed: themeProvider.toggleTheme,
-                            icon: Icon(themeProvider.themeModeIcon),
-                            tooltip: 'Switch to ${themeProvider.isDarkMode ? 'light' : 'dark'} mode',
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: AppSpacing.lg),
-                      
-                      // App Logo and Title
-                      _buildHeader(theme),
-                      
-                      const SizedBox(height: AppSpacing.huge),
-                      
-                      // Registration Form
-                      _buildRegistrationForm(theme),
-                      
-                      const SizedBox(height: AppSpacing.xxl),
-                      
-                      // Sign in link
-                      _buildSignInLink(theme),
-                    ],
+                              onPressed: themeProvider.toggleTheme,
+                              icon: Icon(
+                                themeProvider.themeModeIcon,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              tooltip:
+                                  'Switch to ${themeProvider.isDarkMode ? 'light' : 'dark'} mode',
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // App Logo and Title
+                        _buildHeader(theme),
+
+                        const SizedBox(height: AppSpacing.huge),
+
+                        // Registration Form
+                        _buildRegistrationForm(theme),
+
+                        const SizedBox(height: AppSpacing.xxl),
+
+                        // Sign in link
+                        _buildSignInLink(theme),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -395,7 +414,7 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
           children: [
             // Error message
             if (_errorMessage != null) _buildErrorMessage(theme),
-            
+
             // Full Name field
             TextFormField(
               controller: _nameController,
@@ -409,9 +428,9 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
                 prefixIcon: Icon(Icons.person_outline),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Email field
             TextFormField(
               controller: _emailController,
@@ -425,9 +444,9 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
                 prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Password field
             TextFormField(
               controller: _passwordController,
@@ -441,7 +460,9 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
                 prefixIcon: const Icon(Icons.lock_outlined),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                   ),
                   onPressed: () {
                     setState(() {
@@ -451,15 +472,15 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
                 ),
               ),
             ),
-            
+
             // Password strength indicator
             if (_passwordController.text.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.sm),
               _buildPasswordStrengthIndicator(theme),
             ],
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Confirm Password field
             TextFormField(
               controller: _confirmPasswordController,
@@ -473,7 +494,9 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscureConfirmPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                   ),
                   onPressed: () {
                     setState(() {
@@ -483,9 +506,9 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
                 ),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Terms and conditions
             CheckboxListTile(
               value: _acceptTerms,
@@ -521,22 +544,26 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
               contentPadding: EdgeInsets.zero,
               dense: true,
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Register button
             ElevatedButton(
-              onPressed: _isLoading ? null : () {
-                HapticFeedback.lightImpact();
-                _register();
-              },
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Create Account'),
+              onPressed:
+                  _isLoading
+                      ? null
+                      : () {
+                        HapticFeedback.lightImpact();
+                        _register();
+                      },
+              child:
+                  _isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text('Create Account'),
             ),
           ],
         ),
@@ -548,17 +575,14 @@ class _ModernRegisterPageState extends State<ModernRegisterPage>
     final color = _getPasswordStrengthColor();
     final progress = _getPasswordStrengthProgress();
     final text = _getPasswordStrengthText();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Password Strength',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text('Password Strength', style: theme.textTheme.bodySmall),
             Text(
               text,
               style: theme.textTheme.bodySmall?.copyWith(

@@ -6,6 +6,9 @@ import '../../data/models/models.dart';
 import '../widgets/group_detail_info.dart';
 import '../widgets/group_members_list.dart';
 import '../widgets/group_settings_panel.dart';
+import '../widgets/group_bills_tab.dart';
+import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/theme/app_spacing.dart';
 import '../widgets/invite_member_dialog.dart';
 import '../widgets/edit_group_dialog.dart';
 import '../widgets/group_bills_tab.dart';
@@ -62,59 +65,87 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Loading...'),
-          backgroundColor:
-              isDark
-                  ? colorScheme.surface.withValues(alpha: 0.95)
-                  : colorScheme.primary.withValues(alpha: 0.95),
-          foregroundColor: isDark ? colorScheme.onSurface : Colors.white,
-          elevation: 0,
-        ),
         body: AppGradientBackground(
-          child: const Center(child: CircularProgressIndicator()),
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                floating: false,
+                pinned: true,
+                expandedHeight: 56,
+                backgroundColor:
+                    isDark ? colorScheme.surface : colorScheme.primary,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                forceElevated: false,
+                title: Text(
+                  'Loading...',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? colorScheme.onSurface : Colors.white,
+                  ),
+                ),
+              ),
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     if (_group == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Group Not Found'),
-          backgroundColor:
-              isDark
-                  ? colorScheme.surface.withValues(alpha: 0.95)
-                  : colorScheme.primary.withValues(alpha: 0.95),
-          foregroundColor: isDark ? colorScheme.onSurface : Colors.white,
-          elevation: 0,
-        ),
         body: AppGradientBackground(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Group not found',
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                floating: false,
+                pinned: true,
+                expandedHeight: 56,
+                backgroundColor:
+                    isDark ? colorScheme.surface : colorScheme.primary,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                forceElevated: false,
+                title: Text(
+                  'Group Not Found',
                   style: TextStyle(
-                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+                    color: isDark ? colorScheme.onSurface : Colors.white,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'This group may have been deleted or you may not have access to it.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Group not found',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'This group may have been deleted or you may not have access to it.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
@@ -125,139 +156,6 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     );
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: isDark ? colorScheme.onSurface : Colors.white,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-          tooltip: 'Back to Groups',
-        ),
-        title: Text(
-          _group!.group.name,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDark ? colorScheme.onSurface : Colors.white,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor:
-            isDark
-                ? colorScheme.surface.withValues(alpha: 0.95)
-                : colorScheme.primary.withValues(alpha: 0.95),
-        foregroundColor: isDark ? colorScheme.onSurface : Colors.white,
-        elevation: 0,
-        actions: [
-          // More options menu
-          PopupMenuButton<String>(
-            onSelected: (value) => _handleMenuAction(value),
-            icon: Icon(
-              Icons.more_vert,
-              color: isDark ? colorScheme.onSurface : Colors.white,
-            ),
-            itemBuilder:
-                (context) => [
-                  if (isAdmin) ...[
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 20),
-                          SizedBox(width: 12),
-                          Text('Edit Group'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'invite',
-                      child: Row(
-                        children: [
-                          Icon(Icons.person_add, size: 20),
-                          SizedBox(width: 12),
-                          Text('Invite Members'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete,
-                            size: 20,
-                            color: colorScheme.error,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            'Delete Group',
-                            style: TextStyle(color: colorScheme.error),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else ...[
-                    PopupMenuItem(
-                      value: 'leave',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.exit_to_app,
-                            size: 20,
-                            color: colorScheme.tertiary,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            'Leave Group',
-                            style: TextStyle(color: colorScheme.tertiary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: colorScheme.primary,
-          labelColor: isDark ? colorScheme.onSurface : Colors.white,
-          unselectedLabelColor:
-              isDark
-                  ? colorScheme.onSurfaceVariant
-                  : Colors.white.withValues(alpha: 0.7),
-          tabs: [
-            Tab(
-              text: 'Info',
-              icon: Icon(
-                Icons.info_outline,
-                color: isDark ? colorScheme.onSurface : Colors.white,
-              ),
-            ),
-            Tab(
-              text: 'Members',
-              icon: Icon(
-                Icons.people,
-                color: isDark ? colorScheme.onSurface : Colors.white,
-              ),
-            ),
-            Tab(
-              text: 'Bills',
-              icon: Icon(
-                Icons.receipt_long,
-                color: isDark ? colorScheme.onSurface : Colors.white,
-              ),
-            ),
-            Tab(
-              text: 'Settings',
-              icon: Icon(
-                Icons.settings,
-                color: isDark ? colorScheme.onSurface : Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
       body: AppGradientBackground(
         child: Consumer<GroupsProvider>(
           builder: (context, provider, child) {
@@ -267,21 +165,170 @@ class _GroupDetailPageState extends State<GroupDetailPage>
               _group = updatedGroup;
             }
 
-            return TabBarView(
-              controller: _tabController,
-              children: [
-                // Info Tab
-                GroupDetailInfo(group: _group!),
+            return NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverAppBar(
+                    floating: false,
+                    pinned: true,
+                    expandedHeight: 56,
+                    backgroundColor:
+                        isDark ? colorScheme.surface : colorScheme.primary,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    forceElevated: false,
+                    leading: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: isDark ? colorScheme.onSurface : Colors.white,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Back to Groups',
+                    ),
+                    title: Text(
+                      _group!.group.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? colorScheme.onSurface : Colors.white,
+                      ),
+                    ),
+                    centerTitle: false,
+                    actions: [
+                      // More options menu
+                      PopupMenuButton<String>(
+                        onSelected: (value) => _handleMenuAction(value),
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: isDark ? colorScheme.onSurface : Colors.white,
+                        ),
+                        itemBuilder:
+                            (context) => [
+                              if (isAdmin) ...[
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 20),
+                                      SizedBox(width: 12),
+                                      Text('Edit Group'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'invite',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.person_add, size: 20),
+                                      SizedBox(width: 12),
+                                      Text('Invite Members'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete,
+                                        size: 20,
+                                        color: colorScheme.error,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        'Delete Group',
+                                        style: TextStyle(
+                                          color: colorScheme.error,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ] else ...[
+                                PopupMenuItem(
+                                  value: 'leave',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.exit_to_app,
+                                        size: 20,
+                                        color: colorScheme.tertiary,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        'Leave Group',
+                                        style: TextStyle(
+                                          color: colorScheme.tertiary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                      ),
+                    ],
+                    bottom: TabBar(
+                      controller: _tabController,
+                      indicatorColor: colorScheme.primary,
+                      labelColor: isDark ? colorScheme.onSurface : Colors.white,
+                      unselectedLabelColor:
+                          isDark
+                              ? colorScheme.onSurfaceVariant
+                              : Colors.white.withValues(alpha: 0.7),
+                      tabs: [
+                        Tab(
+                          text: 'Info',
+                          icon: Icon(
+                            Icons.info_outline,
+                            color:
+                                isDark ? colorScheme.onSurface : Colors.white,
+                          ),
+                        ),
+                        Tab(
+                          text: 'Members',
+                          icon: Icon(
+                            Icons.people,
+                            color:
+                                isDark ? colorScheme.onSurface : Colors.white,
+                          ),
+                        ),
+                        Tab(
+                          text: 'Bills',
+                          icon: Icon(
+                            Icons.receipt_long,
+                            color:
+                                isDark ? colorScheme.onSurface : Colors.white,
+                          ),
+                        ),
+                        Tab(
+                          text: 'Settings',
+                          icon: Icon(
+                            Icons.settings,
+                            color:
+                                isDark ? colorScheme.onSurface : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Info Tab
+                  GroupDetailInfo(group: _group!),
 
-                // Members Tab
-                GroupMembersList(group: _group!),
+                  // Members Tab
+                  GroupMembersList(group: _group!),
 
-                // Bills Tab
-                GroupBillsTab(group: _group!),
+                  // Bills Tab
+                  GroupBillsTab(group: _group!),
 
-                // Settings Tab
-                GroupSettingsPanel(group: _group!),
-              ],
+                  // Settings Tab
+                  GroupSettingsPanel(group: _group!),
+                ],
+              ),
             );
           },
         ),
@@ -348,7 +395,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         content: Text(
                           'Failed to delete group: ${provider.error}',
                         ),
-                        backgroundColor: Colors.red,
+                        backgroundColor: Theme.of(context).colorScheme.error,
                       ),
                     );
                   }
@@ -395,12 +442,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         content: Text(
                           'Failed to leave group: ${provider.error}',
                         ),
-                        backgroundColor: Colors.red,
+                        backgroundColor: Theme.of(context).colorScheme.error,
                       ),
                     );
                   }
                 },
-                style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.tertiary,
+                ),
                 child: const Text('Leave'),
               ),
             ],

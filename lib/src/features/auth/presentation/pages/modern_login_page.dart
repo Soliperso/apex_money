@@ -23,7 +23,6 @@ class ModernLoginPage extends StatefulWidget {
 
 class _ModernLoginPageState extends State<ModernLoginPage>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  
   // Controllers and services
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -41,12 +40,12 @@ class _ModernLoginPageState extends State<ModernLoginPage>
   bool _isBiometricAvailable = false;
   bool _isBiometricEnabled = false;
   List<BiometricType> _availableBiometrics = [];
-  
+
   // Security state
   bool _isLockedOut = false;
   int _remainingLockoutTime = 0;
   int _remainingAttempts = 5;
-  
+
   // Email suggestions (not used in this simplified version)
   // List<String> _emailSuggestions = [];
 
@@ -77,23 +76,18 @@ class _ModernLoginPageState extends State<ModernLoginPage>
       duration: AppDuration.medium,
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+
     _animationController.forward();
   }
 
@@ -103,7 +97,7 @@ class _ModernLoginPageState extends State<ModernLoginPage>
       _checkBiometricAvailability(),
       _checkLockoutStatus(),
     ]);
-    
+
     if (_isBiometricAvailable && _isBiometricEnabled && !_isLockedOut) {
       _attemptBiometricLogin();
     }
@@ -145,7 +139,8 @@ class _ModernLoginPageState extends State<ModernLoginPage>
     try {
       final isLockedOut = await LoginAttemptService.isLockedOut();
       if (isLockedOut) {
-        final remainingTime = await LoginAttemptService.getRemainingLockoutTime();
+        final remainingTime =
+            await LoginAttemptService.getRemainingLockoutTime();
         if (mounted) {
           setState(() {
             _isLockedOut = true;
@@ -164,7 +159,9 @@ class _ModernLoginPageState extends State<ModernLoginPage>
   Future<void> _updateRemainingAttempts() async {
     if (_emailController.text.isNotEmpty) {
       try {
-        final attempts = await LoginAttemptService.getRemainingAttempts(_emailController.text);
+        final attempts = await LoginAttemptService.getRemainingAttempts(
+          _emailController.text,
+        );
         if (mounted) {
           setState(() {
             _remainingAttempts = attempts;
@@ -182,7 +179,8 @@ class _ModernLoginPageState extends State<ModernLoginPage>
         if (mounted) {
           final stillLockedOut = await LoginAttemptService.isLockedOut();
           if (stillLockedOut) {
-            final newRemainingTime = await LoginAttemptService.getRemainingLockoutTime();
+            final newRemainingTime =
+                await LoginAttemptService.getRemainingLockoutTime();
             setState(() {
               _remainingLockoutTime = newRemainingTime;
             });
@@ -206,7 +204,8 @@ class _ModernLoginPageState extends State<ModernLoginPage>
 
   Future<void> _attemptBiometricLogin() async {
     try {
-      final credentials = await BiometricAuthService.authenticateWithBiometric();
+      final credentials =
+          await BiometricAuthService.authenticateWithBiometric();
       if (credentials != null && mounted) {
         await _performBiometricLogin(credentials);
       }
@@ -233,7 +232,8 @@ class _ModernLoginPageState extends State<ModernLoginPage>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Biometric login failed. Please use email and password.';
+          _errorMessage =
+              'Biometric login failed. Please use email and password.';
         });
       }
     } finally {
@@ -251,7 +251,8 @@ class _ModernLoginPageState extends State<ModernLoginPage>
     if (await LoginAttemptService.isLockedOut()) {
       final remainingTime = await LoginAttemptService.getRemainingLockoutTime();
       setState(() {
-        _errorMessage = 'Account temporarily locked. Try again in $remainingTime minutes.';
+        _errorMessage =
+            'Account temporarily locked. Try again in $remainingTime minutes.';
       });
       return;
     }
@@ -312,37 +313,41 @@ class _ModernLoginPageState extends State<ModernLoginPage>
 
   void _showBiometricSetupDialog(String authToken) {
     final theme = Theme.of(context);
-    final biometricName = _availableBiometrics.isNotEmpty
-        ? BiometricAuthService.getBiometricTypeName(_availableBiometrics.first)
-        : 'Biometric';
+    final biometricName =
+        _availableBiometrics.isNotEmpty
+            ? BiometricAuthService.getBiometricTypeName(
+              _availableBiometrics.first,
+            )
+            : 'Biometric';
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(_getBiometricIcon(), color: theme.colorScheme.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Text('Enable $biometricName Login?'),
-          ],
-        ),
-        content: Text(
-          'Would you like to enable $biometricName authentication for faster and more secure login?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Not Now'),
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(_getBiometricIcon(), color: theme.colorScheme.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Text('Enable $biometricName Login?'),
+              ],
+            ),
+            content: Text(
+              'Would you like to enable $biometricName authentication for faster and more secure login?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Not Now'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _setupBiometricAuth(authToken);
+                },
+                child: const Text('Enable'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _setupBiometricAuth(authToken);
-            },
-            child: const Text('Enable'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -451,51 +456,62 @@ class _ModernLoginPageState extends State<ModernLoginPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
-    return Scaffold(
-      body: AppGradientBackground(
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 
-                               MediaQuery.of(context).padding.top - 
-                               MediaQuery.of(context).padding.bottom - 
-                               (AppSpacing.screenPadding * 2),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Theme toggle button
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: IconButton(
-                          onPressed: themeProvider.toggleTheme,
-                          icon: Icon(themeProvider.themeModeIcon),
-                          tooltip: 'Switch to ${themeProvider.isDarkMode ? 'light' : 'dark'} mode',
+
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside input fields
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        body: AppGradientBackground(
+          child: SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          MediaQuery.of(context).size.height -
+                          MediaQuery.of(context).padding.top -
+                          MediaQuery.of(context).padding.bottom -
+                          (AppSpacing.screenPadding * 2),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Theme toggle button
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: IconButton(
+                            onPressed: themeProvider.toggleTheme,
+                            icon: Icon(
+                              themeProvider.themeModeIcon,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            tooltip:
+                                'Switch to ${themeProvider.isDarkMode ? 'light' : 'dark'} mode',
+                          ),
                         ),
-                      ),
-                      
-                      const SizedBox(height: AppSpacing.xxl),
-                      
-                      // App Logo and Title
-                      _buildHeader(theme),
-                      
-                      const SizedBox(height: AppSpacing.huge),
-                      
-                      // Login Form
-                      _buildLoginForm(theme),
-                      
-                      const SizedBox(height: AppSpacing.xxl),
-                      
-                      // Sign up link
-                      _buildSignUpLink(theme),
-                    ],
+
+                        const SizedBox(height: AppSpacing.xxl),
+
+                        // App Logo and Title
+                        _buildHeader(theme),
+
+                        const SizedBox(height: AppSpacing.huge),
+
+                        // Login Form
+                        _buildLoginForm(theme),
+
+                        const SizedBox(height: AppSpacing.xxl),
+
+                        // Sign up link
+                        _buildSignUpLink(theme),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -556,10 +572,12 @@ class _ModernLoginPageState extends State<ModernLoginPage>
           children: [
             // Security warnings
             if (_isLockedOut) _buildLockoutWarning(theme),
-            if (!_isLockedOut && _remainingAttempts <= 3 && _remainingAttempts > 0)
+            if (!_isLockedOut &&
+                _remainingAttempts <= 3 &&
+                _remainingAttempts > 0)
               _buildAttemptsWarning(theme),
             if (_errorMessage != null) _buildErrorMessage(theme),
-            
+
             // Email field
             TextFormField(
               controller: _emailController,
@@ -574,9 +592,9 @@ class _ModernLoginPageState extends State<ModernLoginPage>
                 prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Password field
             TextFormField(
               controller: _passwordController,
@@ -592,7 +610,9 @@ class _ModernLoginPageState extends State<ModernLoginPage>
                 prefixIcon: const Icon(Icons.lock_outlined),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                   ),
                   onPressed: () {
                     setState(() {
@@ -602,9 +622,9 @@ class _ModernLoginPageState extends State<ModernLoginPage>
                 ),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Remember me & Forgot password
             Row(
               children: [
@@ -626,7 +646,9 @@ class _ModernLoginPageState extends State<ModernLoginPage>
                   onPressed: () {
                     final email = _emailController.text.trim();
                     if (email.isNotEmpty) {
-                      GoRouter.of(context).go('/forgot-password?email=${Uri.encodeComponent(email)}');
+                      GoRouter.of(context).go(
+                        '/forgot-password?email=${Uri.encodeComponent(email)}',
+                      );
                     } else {
                       GoRouter.of(context).go('/forgot-password');
                     }
@@ -635,11 +657,13 @@ class _ModernLoginPageState extends State<ModernLoginPage>
                 ),
               ],
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Biometric login (if available and enabled)
-            if (_isBiometricAvailable && _isBiometricEnabled && !_isLockedOut) ...[
+            if (_isBiometricAvailable &&
+                _isBiometricEnabled &&
+                !_isLockedOut) ...[
               OutlinedButton.icon(
                 onPressed: _attemptBiometricLogin,
                 icon: Icon(_getBiometricIcon()),
@@ -652,7 +676,9 @@ class _ModernLoginPageState extends State<ModernLoginPage>
                 children: [
                   Expanded(child: Divider(color: theme.colorScheme.outline)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
                     child: Text(
                       'or',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -665,62 +691,80 @@ class _ModernLoginPageState extends State<ModernLoginPage>
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
-            
+
             // Biometric setup prompt (if available but not enabled)
             if (_isBiometricAvailable && !_isBiometricEnabled && !_isLockedOut)
               StatusCard(
                 title: 'Quick Login Available',
-                message: 'Enable ${_availableBiometrics.isNotEmpty ? BiometricAuthService.getBiometricTypeName(_availableBiometrics.first) : 'biometric'} for secure, one-tap login',
+                message:
+                    'Enable ${_availableBiometrics.isNotEmpty ? BiometricAuthService.getBiometricTypeName(_availableBiometrics.first) : 'biometric'} for secure, one-tap login',
                 icon: _getBiometricIcon(),
                 color: AppTheme.infoColor,
                 action: IconButton(
-                  onPressed: _isSettingUpBiometric ? null : () async {
-                    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
-                      _showErrorMessage('Please enter your email and password first');
-                      return;
-                    }
-                    
-                    setState(() => _isLoading = true);
-                    try {
-                      final loginResult = await _authService.login(
-                        _emailController.text.trim(),
-                        _passwordController.text,
-                      );
-                      await _setupBiometricAuth(loginResult['access_token']);
-                    } catch (e) {
-                      _showErrorMessage('Please check your credentials and try again');
-                    } finally {
-                      setState(() => _isLoading = false);
-                    }
-                  },
-                  icon: _isSettingUpBiometric 
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(_getBiometricIcon()),
+                  onPressed:
+                      _isSettingUpBiometric
+                          ? null
+                          : () async {
+                            if (_emailController.text.trim().isEmpty ||
+                                _passwordController.text.isEmpty) {
+                              _showErrorMessage(
+                                'Please enter your email and password first',
+                              );
+                              return;
+                            }
+
+                            setState(() => _isLoading = true);
+                            try {
+                              final loginResult = await _authService.login(
+                                _emailController.text.trim(),
+                                _passwordController.text,
+                              );
+                              await _setupBiometricAuth(
+                                loginResult['access_token'],
+                              );
+                            } catch (e) {
+                              _showErrorMessage(
+                                'Please check your credentials and try again',
+                              );
+                            } finally {
+                              setState(() => _isLoading = false);
+                            }
+                          },
+                  icon:
+                      _isSettingUpBiometric
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : Icon(_getBiometricIcon()),
                 ),
               ),
-            
+
             if (_isBiometricAvailable && !_isBiometricEnabled && !_isLockedOut)
               const SizedBox(height: AppSpacing.lg),
-            
+
             // Login button
             ElevatedButton(
-              onPressed: (_isLoading || _isLockedOut) ? null : () {
-                HapticFeedback.lightImpact();
-                _login();
-              },
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(_isLockedOut 
-                      ? 'Account Locked ($_remainingLockoutTime min)' 
-                      : 'Sign In'),
+              onPressed:
+                  (_isLoading || _isLockedOut)
+                      ? null
+                      : () {
+                        HapticFeedback.lightImpact();
+                        _login();
+                      },
+              child:
+                  _isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : Text(
+                        _isLockedOut
+                            ? 'Account Locked ($_remainingLockoutTime min)'
+                            : 'Sign In',
+                      ),
             ),
           ],
         ),
@@ -745,7 +789,8 @@ class _ModernLoginPageState extends State<ModernLoginPage>
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: StatusCard(
         title: 'Warning',
-        message: '$_remainingAttempts attempt${_remainingAttempts == 1 ? '' : 's'} remaining before account lockout.',
+        message:
+            '$_remainingAttempts attempt${_remainingAttempts == 1 ? '' : 's'} remaining before account lockout.',
         icon: Icons.warning_amber,
         color: AppTheme.warningColor,
       ),

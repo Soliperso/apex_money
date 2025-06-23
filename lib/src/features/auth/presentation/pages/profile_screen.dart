@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:apex_money/src/shared/services/auth_service.dart';
 import 'package:apex_money/src/shared/services/user_profile_notifier.dart';
 import 'package:apex_money/src/shared/utils/avatar_utils.dart';
 import 'package:apex_money/src/shared/widgets/app_gradient_background.dart';
+import 'package:apex_money/src/shared/theme/app_spacing.dart';
+import 'package:apex_money/src/shared/theme/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -234,759 +238,993 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainer,
-      appBar: AppBar(
-        title: Text(
-          'Profile',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.onSurface
-                : Colors.white,
-          ),
-        ),
-        backgroundColor: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surface.withValues(alpha: 0.95)
-            : theme.colorScheme.primary.withValues(alpha: 0.95),
-        foregroundColor: theme.brightness == Brightness.dark
-            ? theme.colorScheme.onSurfaceVariant
-            : Colors.white.withValues(alpha: 0.9),
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.surface.withValues(alpha: 0.95)
-                : theme.colorScheme.primary.withValues(alpha: 0.95),
-            border: Border(
-              bottom: BorderSide(
-                color: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.outlineVariant.withValues(alpha: 0.2)
-                    : Colors.white.withValues(alpha: 0.2),
-                width: 0.5,
-              ),
-            ),
-          ),
-        ),
-        leading: IconButton(
-          onPressed: () => GoRouter.of(context).go('/dashboard'),
-          icon: const Icon(Icons.arrow_back),
-          color: theme.brightness == Brightness.dark
-              ? theme.colorScheme.onSurfaceVariant
-              : Colors.white,
-        ),
-        actions: [
-          IconButton(
-            onPressed: _logout,
-            icon: const Icon(Icons.logout),
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.onSurfaceVariant
-                : Colors.white,
-          ),
-        ],
-      ),
       body: AppGradientBackground(
-        child:
-            _isLoading
-                ? Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      theme.colorScheme.primary,
-                    ),
-                  ),
-                )
-                : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        // Profile Picture Section
-                        Stack(
-                          children: [
-                            AvatarUtils.buildAvatar(
-                              userName: _nameController.text,
-                              profilePicture: _profilePicture,
-                              radius: 60,
-                              fontSize: 36,
-                              style: AvatarStyle.premium,
-                              status: StatusIndicator.verified,
-                              showBorder: true,
-                              borderColor: Colors.white,
-                              borderWidth: 4,
-                              enableAnimation: true,
-                              onTap: () {
-                                if (_isEditing) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Image picker feature coming soon!',
-                                      ),
-                                      backgroundColor: Colors.blueAccent,
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                            if (_isEditing)
-                              Positioned(
-                                bottom: 5,
-                                left: 5,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Color(0xFF6366F1),
-                                        Color(0xFF8B5CF6),
-                                      ],
-                                    ),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFF6366F1,
-                                        ).withValues(alpha: 0.4),
-                                        blurRadius: 8,
-                                        spreadRadius: 0,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: IconButton(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Image picker feature coming soon!',
-                                          ),
-                                          backgroundColor: Colors.blueAccent,
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 40),
-
-                        // Profile Form Card
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(28),
-                            color: theme.colorScheme.surface,
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                spreadRadius: 0,
-                                blurRadius: 32,
-                                offset: const Offset(0, 16),
-                              ),
-                              BoxShadow(
-                                color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-                                spreadRadius: 0,
-                                blurRadius: 64,
-                                offset: const Offset(0, 32),
-                              ),
-                              if (theme.brightness == Brightness.light)
-                                BoxShadow(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  spreadRadius: 1,
-                                  blurRadius: 0,
-                                  offset: const Offset(0, -1),
-                                ),
-                            ],
-                            border: Border.all(
-                              color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                              width: 1,
+        child: CustomScrollView(
+          slivers: [
+            // Modern App Bar matching dashboard
+            _buildSliverAppBar(theme, themeProvider),
+            SliverToBoxAdapter(
+              child:
+                  _isLoading
+                      ? Container(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.primary,
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(18.0),
-                            child: Column(
-                              children: [
-                                // Profile Completion Progress
-                                _buildProfileCompletion(),
-                                const SizedBox(height: 16),
-
-                                // Achievement Badges
-                                _buildAchievementBadges(),
-                                const SizedBox(height: 12),
-
-                                // Error Message
-                                if (_errorMessage != null)
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.errorContainer,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: theme.colorScheme.error.withValues(alpha: 0.3),
+                        ),
+                      )
+                      : Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              // Profile Picture Section
+                              Stack(
+                                children: [
+                                  AvatarUtils.buildAvatar(
+                                    context: context,
+                                    userName: _nameController.text,
+                                    profilePicture: _profilePicture,
+                                    radius: 60,
+                                    fontSize: 36,
+                                    style: AvatarStyle.premium,
+                                    status: StatusIndicator.verified,
+                                    showBorder: true,
+                                    borderColor: Colors.white,
+                                    borderWidth: 4,
+                                    enableAnimation: true,
+                                    onTap: () {
+                                      if (_isEditing) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Image picker feature coming soon!',
+                                            ),
+                                            backgroundColor: Colors.blueAccent,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  if (_isEditing)
+                                    Positioned(
+                                      bottom: 5,
+                                      left: 5,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Color(0xFF6366F1),
+                                              Color(0xFF8B5CF6),
+                                            ],
+                                          ),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(
+                                                0xFF6366F1,
+                                              ).withValues(alpha: 0.4),
+                                              blurRadius: 8,
+                                              spreadRadius: 0,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: IconButton(
+                                          onPressed: () {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Image picker feature coming soon!',
+                                                ),
+                                                backgroundColor:
+                                                    Colors.blueAccent,
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            Icons.camera_alt,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    child: Row(
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.xl),
+
+                              // Profile Form Card
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.lg),
+                                decoration: BoxDecoration(
+                                  color: theme.brightness == Brightness.dark 
+                                      ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                                      : theme.colorScheme.surface.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outlineVariant
+                                        .withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    // Section Header with icon - matching other screens style
+                                    Row(
                                       children: [
-                                        Icon(
-                                          Icons.error_outline,
-                                          color: theme.colorScheme.error,
-                                          size: 20,
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primaryContainer,
+                                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                          ),
+                                          child: Icon(
+                                            Icons.person_rounded,
+                                            size: 18,
+                                            color: theme.colorScheme.onPrimaryContainer,
+                                          ),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            _errorMessage!,
-                                            style: TextStyle(
-                                              color: theme.colorScheme.onErrorContainer,
-                                              fontSize: 14,
-                                            ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Profile Information',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color: theme.colorScheme.onSurface,
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
+                                    const SizedBox(height: 16),
 
-                                // Name Field
-                                TextFormField(
-                                  controller: _nameController,
-                                  enabled: _isEditing,
-                                  validator: _validateName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.4,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Full Name',
-                                    labelStyle: TextStyle(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    prefixIcon: Container(
-                                      margin: const EdgeInsets.all(8),
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Icon(
-                                        Icons.person_outline_rounded,
-                                        color: theme.colorScheme.primary,
-                                        size: 16,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 14,
-                                    ),
-                                    filled: true,
-                                    fillColor: _isEditing
-                                        ? theme.colorScheme.surface
-                                        : theme.colorScheme.surfaceContainer,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: theme.colorScheme.outline,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: theme.colorScheme.primary,
-                                        width: 2.5,
-                                      ),
-                                    ),
-                                    disabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                                        width: 1,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
+                                    // Profile Completion Progress
+                                    _buildProfileCompletion(),
+                                    const SizedBox(height: 16),
 
-                                // Email Field
-                                TextFormField(
-                                  controller: _emailController,
-                                  enabled: _isEditing,
-                                  validator: _validateEmail,
-                                  keyboardType: TextInputType.emailAddress,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.4,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Email Address',
-                                    labelStyle: TextStyle(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    prefixIcon: Container(
-                                      margin: const EdgeInsets.all(8),
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Icon(
-                                        Icons.email_outlined,
-                                        color: theme.colorScheme.primary,
-                                        size: 16,
-                                      ),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 14,
-                                    ),
-                                    filled: true,
-                                    fillColor: _isEditing
-                                        ? theme.colorScheme.surface
-                                        : theme.colorScheme.surfaceContainer,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: theme.colorScheme.outline,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: theme.colorScheme.primary,
-                                        width: 2.5,
-                                      ),
-                                    ),
-                                    disabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(
-                                        color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                                        width: 1,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                    // Achievement Badges
+                                    _buildAchievementBadges(),
+                                    const SizedBox(height: 12),
 
-                                // Password Fields (only when editing)
-                                if (_isEditing) ...[
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    validator: _validatePassword,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: 'New Password (optional)',
-                                      labelStyle: TextStyle(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.lock_outline,
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                    // Error Message
+                                    if (_errorMessage != null)
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        margin: const EdgeInsets.only(
+                                          bottom: 16,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscurePassword =
-                                                !_obscurePassword;
-                                          });
-                                        },
-                                      ),
-                                      filled: true,
-                                      fillColor: theme.colorScheme.surfaceContainer,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: theme.colorScheme.outline,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: theme.colorScheme.outline,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: theme.colorScheme.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _confirmPasswordController,
-                                    obscureText: _obscureConfirmPassword,
-                                    validator: _validateConfirmPassword,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                    decoration: InputDecoration(
-                                      labelText: 'Confirm New Password',
-                                      labelStyle: TextStyle(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.lock_outline,
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscureConfirmPassword
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscureConfirmPassword =
-                                                !_obscureConfirmPassword;
-                                          });
-                                        },
-                                      ),
-                                      filled: true,
-                                      fillColor: theme.colorScheme.surfaceContainer,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: theme.colorScheme.outline,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: theme.colorScheme.outline,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: theme.colorScheme.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-
-                                const SizedBox(height: 20),
-
-                                // Action Buttons
-                                Row(
-                                  children: [
-                                    if (_isEditing) ...[
-                                      Expanded(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(16),
-                                            color: theme.colorScheme.surfaceContainer,
-                                            border: Border.all(
-                                              color: theme.colorScheme.outline,
-                                              width: 1,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-                                                spreadRadius: 0,
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ],
-                                          ),
-                                          child: OutlinedButton(
-                                            onPressed: _isSaving
-                                                ? null
-                                                : () {
-                                                  setState(() {
-                                                    _isEditing = false;
-                                                    _passwordController.clear();
-                                                    _confirmPasswordController.clear();
-                                                  });
-                                                },
-                                            style: OutlinedButton.styleFrom(
-                                              padding: const EdgeInsets.symmetric(vertical: 18),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              side: BorderSide.none,
-                                              elevation: 0,
-                                            ),
-                                            child: Text(
-                                              'Cancel',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: theme.colorScheme.onSurfaceVariant,
-                                              ),
-                                            ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                          border: Border.all(
+                                            color: theme.colorScheme.error.withValues(alpha: 0.3),
+                                            width: 1,
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(16),
-                                            color: theme.colorScheme.primary,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                                                spreadRadius: 0,
-                                                blurRadius: 16,
-                                                offset: const Offset(0, 8),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ElevatedButton(
-                                            onPressed: _isSaving ? null : _saveProfile,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.transparent,
-                                              shadowColor: Colors.transparent,
-                                              padding: const EdgeInsets.symmetric(vertical: 18),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                            ),
-                                            child: _isSaving
-                                                ? SizedBox(
-                                                  height: 20,
-                                                  width: 20,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                                      theme.colorScheme.onPrimary,
-                                                    ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            // Section Header with icon - matching Settings/Info tab style
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.errorContainer,
+                                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                                                   ),
-                                                )
-                                                : Text(
-                                                  'Save Changes',
+                                                  child: Icon(
+                                                    Icons.error_outline,
+                                                    size: 18,
+                                                    color: theme.colorScheme.onErrorContainer,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Text(
+                                                  'Error',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: theme.colorScheme.error,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              _errorMessage!,
+                                              style: theme.textTheme.bodyMedium?.copyWith(
+                                                color: theme.colorScheme.onSurface,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                    // Name Field
+                                    TextFormField(
+                                      controller: _nameController,
+                                      enabled: _isEditing,
+                                      validator: _validateName,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.4,
+                                        color: theme.colorScheme.onSurface,
+                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'Full Name',
+                                        labelStyle: TextStyle(
+                                          color:
+                                              theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        prefixIcon: Container(
+                                          margin: const EdgeInsets.all(8),
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primary
+                                                .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.person_outline_rounded,
+                                            color: theme.colorScheme.primary,
+                                            size: 16,
+                                          ),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 14,
+                                            ),
+                                        filled: true,
+                                        fillColor:
+                                            _isEditing
+                                                ? theme.colorScheme.surface
+                                                : theme
+                                                    .colorScheme
+                                                    .surfaceContainer,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.outline,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.primary,
+                                            width: 2.5,
+                                          ),
+                                        ),
+                                        disabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.outline
+                                                .withValues(alpha: 0.5),
+                                            width: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+
+                                    // Email Field
+                                    TextFormField(
+                                      controller: _emailController,
+                                      enabled: _isEditing,
+                                      validator: _validateEmail,
+                                      keyboardType: TextInputType.emailAddress,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.4,
+                                        color: theme.colorScheme.onSurface,
+                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'Email Address',
+                                        labelStyle: TextStyle(
+                                          color:
+                                              theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        prefixIcon: Container(
+                                          margin: const EdgeInsets.all(8),
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.primary
+                                                .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.email_outlined,
+                                            color: theme.colorScheme.primary,
+                                            size: 16,
+                                          ),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 14,
+                                            ),
+                                        filled: true,
+                                        fillColor:
+                                            _isEditing
+                                                ? theme.colorScheme.surface
+                                                : theme
+                                                    .colorScheme
+                                                    .surfaceContainer,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.outline,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.primary,
+                                            width: 2.5,
+                                          ),
+                                        ),
+                                        disabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.outline
+                                                .withValues(alpha: 0.5),
+                                            width: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Password Fields (only when editing)
+                                    if (_isEditing) ...[
+                                      const SizedBox(height: 16),
+                                      TextFormField(
+                                        controller: _passwordController,
+                                        obscureText: _obscurePassword,
+                                        validator: _validatePassword,
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onSurface,
+                                        ),
+                                        decoration: InputDecoration(
+                                          labelText: 'New Password (optional)',
+                                          labelStyle: TextStyle(
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.lock_outline,
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                      .visibility_off_outlined,
+                                              color:
+                                                  theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _obscurePassword =
+                                                    !_obscurePassword;
+                                              });
+                                            },
+                                          ),
+                                          filled: true,
+                                          fillColor:
+                                              theme
+                                                  .colorScheme
+                                                  .surfaceContainer,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.outline,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.outline,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.primary,
+                                              width: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextFormField(
+                                        controller: _confirmPasswordController,
+                                        obscureText: _obscureConfirmPassword,
+                                        validator: _validateConfirmPassword,
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onSurface,
+                                        ),
+                                        decoration: InputDecoration(
+                                          labelText: 'Confirm New Password',
+                                          labelStyle: TextStyle(
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.lock_outline,
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscureConfirmPassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                      .visibility_off_outlined,
+                                              color:
+                                                  theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _obscureConfirmPassword =
+                                                    !_obscureConfirmPassword;
+                                              });
+                                            },
+                                          ),
+                                          filled: true,
+                                          fillColor:
+                                              theme
+                                                  .colorScheme
+                                                  .surfaceContainer,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.outline,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.outline,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: theme.colorScheme.primary,
+                                              width: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+
+                                    const SizedBox(height: 20),
+
+                                    // Action Buttons
+                                    Row(
+                                      children: [
+                                        if (_isEditing) ...[
+                                          Expanded(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                                color:
+                                                    theme
+                                                        .colorScheme
+                                                        .surfaceContainer,
+                                                border: Border.all(
+                                                  color:
+                                                      theme.colorScheme.outline,
+                                                  width: 1,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .shadow
+                                                        .withValues(alpha: 0.1),
+                                                    spreadRadius: 0,
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: OutlinedButton(
+                                                onPressed:
+                                                    _isSaving
+                                                        ? null
+                                                        : () {
+                                                          setState(() {
+                                                            _isEditing = false;
+                                                            _passwordController
+                                                                .clear();
+                                                            _confirmPasswordController
+                                                                .clear();
+                                                          });
+                                                        },
+                                                style: OutlinedButton.styleFrom(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 18,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          AppSpacing.radiusMd,
+                                                        ),
+                                                  ),
+                                                  side: BorderSide.none,
+                                                  elevation: 0,
+                                                ),
+                                                child: Text(
+                                                  'Cancel',
                                                   style: TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
-                                                    color: theme.colorScheme.onPrimary,
+                                                    color:
+                                                        theme
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
                                                   ),
                                                 ),
-                                          ),
-                                        ),
-                                      ),
-                                    ] else ...[
-                                      Expanded(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(16),
-                                            color: theme.colorScheme.primary,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                                                spreadRadius: 0,
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 6),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _isEditing = true;
-                                              });
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.transparent,
-                                              shadowColor: Colors.transparent,
-                                              padding: const EdgeInsets.symmetric(vertical: 18),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              'Edit Profile',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: theme.colorScheme.onPrimary,
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                    ],
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary
+                                                        .withValues(alpha: 0.3),
+                                                    spreadRadius: 0,
+                                                    blurRadius: 16,
+                                                    offset: const Offset(0, 8),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: ElevatedButton(
+                                                onPressed:
+                                                    _isSaving
+                                                        ? null
+                                                        : _saveProfile,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  shadowColor:
+                                                      Colors.transparent,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 18,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          AppSpacing.radiusMd,
+                                                        ),
+                                                  ),
+                                                ),
+                                                child:
+                                                    _isSaving
+                                                        ? SizedBox(
+                                                          height: 20,
+                                                          width: 20,
+                                                          child: CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation<
+                                                                  Color
+                                                                >(
+                                                                  theme
+                                                                      .colorScheme
+                                                                      .onPrimary,
+                                                                ),
+                                                          ),
+                                                        )
+                                                        : Text(
+                                                          'Save Changes',
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color:
+                                                                theme
+                                                                    .colorScheme
+                                                                    .onPrimary,
+                                                          ),
+                                                        ),
+                                              ),
+                                            ),
+                                          ),
+                                        ] else ...[
+                                          Expanded(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary
+                                                        .withValues(alpha: 0.3),
+                                                    spreadRadius: 0,
+                                                    blurRadius: 12,
+                                                    offset: const Offset(0, 6),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: ElevatedButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _isEditing = true;
+                                                  });
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  shadowColor:
+                                                      Colors.transparent,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 18,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          AppSpacing.radiusMd,
+                                                        ),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Edit Profile',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color:
+                                                        theme
+                                                            .colorScheme
+                                                            .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // App Settings Section
+                              _buildExpandableSection(
+                                'App Settings',
+                                Icons.settings_outlined,
+                                _isPreferencesExpanded,
+                                () => setState(
+                                  () =>
+                                      _isPreferencesExpanded =
+                                          !_isPreferencesExpanded,
+                                ),
+                                [
+                                  _buildToggleTile(
+                                    'Dark Mode',
+                                    'Switch to dark theme',
+                                    Icons.dark_mode_outlined,
+                                    _darkModeEnabled,
+                                    (value) => setState(
+                                      () => _darkModeEnabled = value,
+                                    ),
+                                  ),
+                                  _buildToggleTile(
+                                    'Push Notifications',
+                                    'Receive app notifications',
+                                    Icons.notifications_outlined,
+                                    _notificationsEnabled,
+                                    (value) => setState(
+                                      () => _notificationsEnabled = value,
+                                    ),
+                                  ),
+                                  _buildDropdownTile(
+                                    'Currency',
+                                    'Default currency for transactions',
+                                    Icons.attach_money,
+                                    _selectedCurrency,
+                                    ['USD', 'EUR', 'GBP', 'CAD', 'AUD'],
+                                    (value) => setState(
+                                      () => _selectedCurrency = value,
+                                    ),
+                                  ),
+                                  _buildDropdownTile(
+                                    'Language',
+                                    'App display language',
+                                    Icons.language,
+                                    _selectedLanguage,
+                                    ['English', 'Spanish', 'French', 'German'],
+                                    (value) => setState(
+                                      () => _selectedLanguage = value,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // Security Settings Section
+                              _buildExpandableSection(
+                                'Security & Privacy',
+                                Icons.security_outlined,
+                                _isSecurityExpanded,
+                                () => setState(
+                                  () =>
+                                      _isSecurityExpanded =
+                                          !_isSecurityExpanded,
+                                ),
+                                [
+                                  _buildToggleTile(
+                                    'Biometric Authentication',
+                                    'Use fingerprint or face unlock',
+                                    Icons.fingerprint,
+                                    _biometricEnabled,
+                                    (value) => setState(
+                                      () => _biometricEnabled = value,
+                                    ),
+                                    customIconColor: Colors.lightBlue,
+                                  ),
+                                  _buildToggleTile(
+                                    'Analytics',
+                                    'Help improve the app with usage data',
+                                    Icons.analytics_outlined,
+                                    _analyticsEnabled,
+                                    (value) => setState(
+                                      () => _analyticsEnabled = value,
+                                    ),
+                                  ),
+                                  _buildActionTile(
+                                    'Change Password',
+                                    'Update your account password',
+                                    Icons.lock_outlined,
+                                    () => _showChangePasswordDialog(),
+                                  ),
+                                  _buildActionTile(
+                                    'Two-Factor Authentication',
+                                    'Add extra security to your account',
+                                    Icons.verified_user_outlined,
+                                    () => _showComingSoonSnackbar('2FA setup'),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // Data & Privacy Section
+                              _buildExpandableSection(
+                                'Data & Privacy',
+                                Icons.privacy_tip_outlined,
+                                _isPrivacyExpanded,
+                                () => setState(
+                                  () =>
+                                      _isPrivacyExpanded = !_isPrivacyExpanded,
+                                ),
+                                [
+                                  _buildActionTile(
+                                    'Export Data',
+                                    'Download your financial data',
+                                    Icons.download_outlined,
+                                    () => _exportUserData(),
+                                  ),
+                                  _buildActionTile(
+                                    'Privacy Policy',
+                                    'View our privacy policy',
+                                    Icons.policy_outlined,
+                                    () => _showComingSoonSnackbar(
+                                      'Privacy policy',
+                                    ),
+                                  ),
+                                  _buildActionTile(
+                                    'Terms of Service',
+                                    'Read terms and conditions',
+                                    Icons.description_outlined,
+                                    () => _showComingSoonSnackbar(
+                                      'Terms of service',
+                                    ),
+                                  ),
+                                  _buildActionTile(
+                                    'Delete Account',
+                                    'Permanently delete your account',
+                                    Icons.delete_forever_outlined,
+                                    () => _showDeleteAccountDialog(),
+                                    isDestructive: true,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-
-                        const SizedBox(height: 20),
-
-                        // App Settings Section
-                        _buildExpandableSection(
-                          'App Settings',
-                          Icons.settings_outlined,
-                          _isPreferencesExpanded,
-                          () => setState(
-                            () =>
-                                _isPreferencesExpanded =
-                                    !_isPreferencesExpanded,
-                          ),
-                          [
-                            _buildToggleTile(
-                              'Dark Mode',
-                              'Switch to dark theme',
-                              Icons.dark_mode_outlined,
-                              _darkModeEnabled,
-                              (value) =>
-                                  setState(() => _darkModeEnabled = value),
-                            ),
-                            _buildToggleTile(
-                              'Push Notifications',
-                              'Receive app notifications',
-                              Icons.notifications_outlined,
-                              _notificationsEnabled,
-                              (value) =>
-                                  setState(() => _notificationsEnabled = value),
-                            ),
-                            _buildDropdownTile(
-                              'Currency',
-                              'Default currency for transactions',
-                              Icons.attach_money,
-                              _selectedCurrency,
-                              ['USD', 'EUR', 'GBP', 'CAD', 'AUD'],
-                              (value) =>
-                                  setState(() => _selectedCurrency = value),
-                            ),
-                            _buildDropdownTile(
-                              'Language',
-                              'App display language',
-                              Icons.language,
-                              _selectedLanguage,
-                              ['English', 'Spanish', 'French', 'German'],
-                              (value) =>
-                                  setState(() => _selectedLanguage = value),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        // Security Settings Section
-                        _buildExpandableSection(
-                          'Security & Privacy',
-                          Icons.security_outlined,
-                          _isSecurityExpanded,
-                          () => setState(
-                            () => _isSecurityExpanded = !_isSecurityExpanded,
-                          ),
-                          [
-                            _buildToggleTile(
-                              'Biometric Authentication',
-                              'Use fingerprint or face unlock',
-                              Icons.fingerprint,
-                              _biometricEnabled,
-                              (value) =>
-                                  setState(() => _biometricEnabled = value),
-                              customIconColor: Colors.lightBlue,
-                            ),
-                            _buildToggleTile(
-                              'Analytics',
-                              'Help improve the app with usage data',
-                              Icons.analytics_outlined,
-                              _analyticsEnabled,
-                              (value) =>
-                                  setState(() => _analyticsEnabled = value),
-                            ),
-                            _buildActionTile(
-                              'Change Password',
-                              'Update your account password',
-                              Icons.lock_outlined,
-                              () => _showChangePasswordDialog(),
-                            ),
-                            _buildActionTile(
-                              'Two-Factor Authentication',
-                              'Add extra security to your account',
-                              Icons.verified_user_outlined,
-                              () => _showComingSoonSnackbar('2FA setup'),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        // Data & Privacy Section
-                        _buildExpandableSection(
-                          'Data & Privacy',
-                          Icons.privacy_tip_outlined,
-                          _isPrivacyExpanded,
-                          () => setState(
-                            () => _isPrivacyExpanded = !_isPrivacyExpanded,
-                          ),
-                          [
-                            _buildActionTile(
-                              'Export Data',
-                              'Download your financial data',
-                              Icons.download_outlined,
-                              () => _exportUserData(),
-                            ),
-                            _buildActionTile(
-                              'Privacy Policy',
-                              'View our privacy policy',
-                              Icons.policy_outlined,
-                              () => _showComingSoonSnackbar('Privacy policy'),
-                            ),
-                            _buildActionTile(
-                              'Terms of Service',
-                              'Read terms and conditions',
-                              Icons.description_outlined,
-                              () => _showComingSoonSnackbar('Terms of service'),
-                            ),
-                            _buildActionTile(
-                              'Delete Account',
-                              'Permanently delete your account',
-                              Icons.delete_forever_outlined,
-                              () => _showDeleteAccountDialog(),
-                              isDestructive: true,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildSliverAppBar(ThemeData theme, ThemeProvider themeProvider) {
+    final appBarColor =
+        theme.brightness == Brightness.dark
+            ? theme.colorScheme.surface.withValues(alpha: 0.95)
+            : theme.colorScheme.primary.withValues(alpha: 0.95);
+
+    final titleColor =
+        theme.brightness == Brightness.dark
+            ? theme.colorScheme.onSurface
+            : Colors.white;
+
+    final iconColor =
+        theme.brightness == Brightness.dark
+            ? theme.colorScheme.onSurfaceVariant
+            : Colors.white.withValues(alpha: 0.9);
+
+    return SliverAppBar(
+      floating: false,
+      pinned: true,
+      expandedHeight: 56,
+      backgroundColor: appBarColor,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shadowColor: theme.colorScheme.shadow,
+      forceElevated: false,
+      systemOverlayStyle:
+          theme.brightness == Brightness.dark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.light,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          color: appBarColor,
+          border: Border(
+            bottom: BorderSide(
+              color:
+                  theme.brightness == Brightness.dark
+                      ? theme.colorScheme.outlineVariant.withValues(alpha: 0.2)
+                      : Colors.white.withValues(alpha: 0.2),
+              width: 0.5,
+            ),
+          ),
+        ),
+      ),
+      leading: IconButton(
+        onPressed: () => GoRouter.of(context).go('/dashboard'),
+        icon: const Icon(Icons.arrow_back),
+        color: iconColor,
+        tooltip: 'Back to Dashboard',
+      ),
+      title: Text(
+        'Profile',
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: titleColor,
+        ),
+      ),
+      actions: [
+        // Theme toggle
+        IconButton(
+          onPressed: themeProvider.toggleTheme,
+          icon: Icon(themeProvider.themeModeIcon),
+          tooltip: 'Switch theme',
+          color: iconColor,
+        ),
+
+        // Logout button
+        Padding(
+          padding: const EdgeInsets.only(
+            right: AppSpacing.md,
+            left: AppSpacing.xs,
+          ),
+          child: IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            color: iconColor,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1017,22 +1255,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String statusText;
 
     if (completionPercentage == 1.0) {
-      progressColor = theme.brightness == Brightness.dark 
-          ? const Color(0xFF81C784) 
-          : const Color(0xFF4CAF50);
+      progressColor =
+          theme.brightness == Brightness.dark
+              ? const Color(0xFF81C784)
+              : const Color(0xFF4CAF50);
       statusText = 'Complete!';
     } else if (completionPercentage >= 0.75) {
       progressColor = theme.colorScheme.primary;
       statusText = 'Almost there';
     } else if (completionPercentage >= 0.5) {
-      progressColor = theme.brightness == Brightness.dark 
-          ? const Color(0xFF26C6DA) 
-          : const Color(0xFF00BCD4);
+      progressColor =
+          theme.brightness == Brightness.dark
+              ? const Color(0xFF26C6DA)
+              : const Color(0xFF00BCD4);
       statusText = 'Good progress';
     } else {
-      progressColor = theme.brightness == Brightness.dark 
-          ? const Color(0xFF9575CD) 
-          : const Color(0xFF9C27B0);
+      progressColor =
+          theme.brightness == Brightness.dark
+              ? const Color(0xFF9575CD)
+              : const Color(0xFF9C27B0);
       statusText = 'Getting started';
     }
 
@@ -1180,13 +1421,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildProgressMilestone('Basic Info', completedFields >= 2, theme),
-            _buildProgressMilestone('Profile Photo', _profilePicture != null, theme),
+            _buildProgressMilestone(
+              'Profile Photo',
+              _profilePicture != null,
+              theme,
+            ),
             _buildProgressMilestone(
               'Security',
               _biometricEnabled || _notificationsEnabled,
               theme,
             ),
-            _buildProgressMilestone('Complete', completionPercentage == 1.0, theme),
+            _buildProgressMilestone(
+              'Complete',
+              completionPercentage == 1.0,
+              theme,
+            ),
           ],
         ),
       ],
@@ -1194,27 +1443,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Build progress milestone indicator
-  Widget _buildProgressMilestone(String label, bool isCompleted, ThemeData theme) {
+  Widget _buildProgressMilestone(
+    String label,
+    bool isCompleted,
+    ThemeData theme,
+  ) {
     return Column(
       children: [
         Container(
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: isCompleted 
-                ? theme.colorScheme.primary 
-                : theme.colorScheme.outline.withValues(alpha: 0.5),
+            color:
+                isCompleted
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline.withValues(alpha: 0.5),
             shape: BoxShape.circle,
-            boxShadow: isCompleted
-                ? [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                    blurRadius: 4,
-                    spreadRadius: 0,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-                : null,
+            boxShadow:
+                isCompleted
+                    ? [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                    : null,
           ),
         ),
         const SizedBox(height: 4),
@@ -1223,9 +1478,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w500,
-            color: isCompleted 
-                ? theme.colorScheme.onSurface 
-                : theme.colorScheme.onSurfaceVariant,
+            color:
+                isCompleted
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -1243,24 +1499,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-            spreadRadius: 0,
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.05),
-            spreadRadius: 0,
-            blurRadius: 32,
-            offset: const Offset(0, 16),
-          ),
-        ],
+        color: theme.brightness == Brightness.dark 
+            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : theme.colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -1268,29 +1512,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           InkWell(
             onTap: onToggle,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                          blurRadius: 8,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: Icon(
                       icon,
-                      color: theme.colorScheme.primary,
-                      size: 22,
+                      color: theme.colorScheme.onPrimaryContainer,
+                      size: 18,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -1350,25 +1586,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: customBackgroundColor ?? theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(10),
+        color: customBackgroundColor ?? 
+               (theme.brightness == Brightness.dark
+                   ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                   : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: value
-                ? (customIconColor?.withValues(alpha: 0.1) ?? 
-                   theme.colorScheme.primary.withValues(alpha: 0.1))
-                : theme.colorScheme.outline.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            color:
+                value
+                    ? (customIconColor?.withValues(alpha: 0.1) ??
+                        theme.colorScheme.primary.withValues(alpha: 0.1))
+                    : theme.colorScheme.outline.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
           child: Icon(
             icon,
-            color: value
-                ? (customIconColor ?? theme.colorScheme.primary)
-                : theme.colorScheme.onSurfaceVariant,
+            color:
+                value
+                    ? (customIconColor ?? theme.colorScheme.primary)
+                    : theme.colorScheme.onSurfaceVariant,
             size: 16,
           ),
         ),
@@ -1412,8 +1657,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(10),
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -1421,13 +1672,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
-          child: Icon(
-            icon,
-            color: theme.colorScheme.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 20),
         ),
         title: Text(
           title,
@@ -1452,20 +1699,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontWeight: FontWeight.w600,
           ),
           dropdownColor: theme.colorScheme.surface,
-          items: options
-              .map(
-                (option) => DropdownMenuItem(
-                  value: option,
-                  child: Text(
-                    option,
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
+          items:
+              options
+                  .map(
+                    (option) => DropdownMenuItem(
+                      value: option,
+                      child: Text(
+                        option,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                      ),
                     ),
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: (newValue) => newValue != null ? onChanged(newValue) : null,
+                  )
+                  .toList(),
+          onChanged:
+              (newValue) => newValue != null ? onChanged(newValue) : null,
         ),
       ),
     );
@@ -1483,24 +1730,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(10),
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: isDestructive
-                ? theme.colorScheme.error.withValues(alpha: 0.1)
-                : theme.colorScheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            color:
+                isDestructive
+                    ? theme.colorScheme.error.withValues(alpha: 0.1)
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
           child: Icon(
             icon,
-            color: isDestructive 
-                ? theme.colorScheme.error 
-                : theme.colorScheme.primary,
+            color:
+                isDestructive
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
             size: 20,
           ),
         ),
@@ -1509,9 +1764,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
-            color: isDestructive 
-                ? theme.colorScheme.error 
-                : theme.colorScheme.onSurface,
+            color:
+                isDestructive
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
@@ -1898,7 +2154,7 @@ class _AnimatedAchievementBadgeState extends State<_AnimatedAchievementBadge>
                   end: Alignment.bottomRight,
                   colors: gradientColors,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 boxShadow: [
                   // Primary shadow
                   BoxShadow(
@@ -1943,7 +2199,7 @@ class _AnimatedAchievementBadgeState extends State<_AnimatedAchievementBadge>
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   gradient:
                       widget.achievement.isUnlocked
                           ? LinearGradient(

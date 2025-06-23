@@ -787,7 +787,7 @@ class _EnhancedGoalCreatePageState extends State<EnhancedGoalCreatePage> {
       decoration: BoxDecoration(
         color:
             theme.brightness == Brightness.dark
-                ? colorScheme.surfaceContainer.withOpacity(0.8)
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.8)
                 : colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border:

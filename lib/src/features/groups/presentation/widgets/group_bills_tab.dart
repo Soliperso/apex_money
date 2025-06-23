@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/models/models.dart';
 import '../../data/services/bill_service.dart';
 import '../../../../shared/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_gradient_background.dart';
 
 class GroupBillsTab extends StatefulWidget {
   final GroupWithMembersModel group;
@@ -59,39 +60,40 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
-      body: RefreshIndicator(
-        onRefresh: _loadBillsData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Bills Summary
-              if (_isLoading) ...[
-                const Center(child: CircularProgressIndicator()),
-              ] else if (_error != null) ...[
-                _buildErrorWidget(),
-              ] else ...[
-                _buildBillsSummary(),
-                const SizedBox(height: AppSpacing.sectionSpacing),
-
-                // Quick Actions
-                _buildQuickActions(),
-                const SizedBox(height: AppSpacing.sectionSpacing),
-
-                // Recent Bills
-                _buildRecentBillsSection(),
-                const SizedBox(height: AppSpacing.sectionSpacing),
-
-                // Debt Summary
-                if (_debts.isNotEmpty) ...[
-                  _buildDebtSummarySection(),
+      body: AppGradientBackground(
+        child: RefreshIndicator(
+          onRefresh: _loadBillsData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppSpacing.screenPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Bills Summary
+                if (_isLoading) ...[
+                  const Center(child: CircularProgressIndicator()),
+                ] else if (_error != null) ...[
+                  _buildErrorWidget(),
+                ] else ...[
+                  _buildBillsSummary(),
                   const SizedBox(height: AppSpacing.sectionSpacing),
+
+                  // Quick Actions
+                  _buildQuickActions(),
+                  const SizedBox(height: AppSpacing.sectionSpacing),
+
+                  // Recent Bills
+                  _buildRecentBillsSection(),
+                  const SizedBox(height: AppSpacing.sectionSpacing),
+
+                  // Debt Summary
+                  if (_debts.isNotEmpty) ...[
+                    _buildDebtSummarySection(),
+                    const SizedBox(height: AppSpacing.sectionSpacing),
+                  ],
                 ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -101,12 +103,17 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
   Widget _buildErrorWidget() {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             Icon(Icons.error_outline, size: 48, color: colorScheme.error),
@@ -139,69 +146,79 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
   Widget _buildBillsSummary() {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Bills Overview',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    'Total Bills',
-                    '${_statistics['totalBills'] ?? 0}',
-                    Icons.receipt_long,
-                    colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _buildStatCard(
-                    'Active Bills',
-                    '${_statistics['activeBills'] ?? 0}',
-                    Icons.pending_actions,
-                    colorScheme.tertiary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    'Total Amount',
-                    '\$${(_statistics['totalBillAmount'] ?? 0.0).toStringAsFixed(2)}',
-                    Icons.attach_money,
-                    colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _buildStatCard(
-                    'Outstanding',
-                    '\$${(_statistics['activeDebtAmount'] ?? 0.0).toStringAsFixed(2)}',
-                    Icons.schedule,
-                    colorScheme.error,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bills Overview',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Total Bills',
+                  '${_statistics['totalBills'] ?? 0}',
+                  Icons.receipt_long,
+                  colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _buildStatCard(
+                  'Active Bills',
+                  '${_statistics['activeBills'] ?? 0}',
+                  Icons.pending_actions,
+                  colorScheme.tertiary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Total Amount',
+                  '\$${(_statistics['totalBillAmount'] ?? 0.0).toStringAsFixed(2)}',
+                  Icons.attach_money,
+                  colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _buildStatCard(
+                  'Outstanding',
+                  '\$${(_statistics['activeDebtAmount'] ?? 0.0).toStringAsFixed(2)}',
+                  Icons.schedule,
+                  colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -217,25 +234,61 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.12),
+            color.withValues(alpha: 0.06),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
+          // Icon
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Value with better styling
           Text(
             value,
-            style: TextStyle(
-              fontSize: 16,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+
+          const SizedBox(height: 2),
+
+          // Title
           Text(
             title,
-            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -285,9 +338,8 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
           children: [
             Text(
               'Recent Bills',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
                 color: colorScheme.onSurface,
               ),
             ),
@@ -310,46 +362,61 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
   Widget _buildEmptyBillsWidget() {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'No bills yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Create your first bill to start tracking group expenses',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            ElevatedButton.icon(
-              onPressed: _navigateToCreateBill,
-              icon: const Icon(Icons.add),
-              label: const Text('Create First Bill'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-              ),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: Colors.grey.withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'No bills yet',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Create your first bill to start tracking group expenses',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          ElevatedButton.icon(
+            onPressed: _navigateToCreateBill,
+            icon: const Icon(Icons.add),
+            label: const Text('Create First Bill'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              elevation: 2,
+              shadowColor: colorScheme.primary.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -361,11 +428,16 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
             .where((m) => m.userId == bill.paidByUserId)
             .firstOrNull;
 
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: colorScheme.surfaceContainer,
+    return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: _getBillStatusColor(
@@ -427,12 +499,17 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
   Widget _buildDebtSummarySection() {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceContainer,
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

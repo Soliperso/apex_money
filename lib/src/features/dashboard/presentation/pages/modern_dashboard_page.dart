@@ -329,7 +329,8 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
 
       // Modern FAB
       floatingActionButton: _buildFloatingActionButton(theme),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation:
+          const _CustomCenterFloatingActionButtonLocation(),
     );
   }
 
@@ -357,7 +358,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shadowColor: theme.colorScheme.shadow,
-      forceElevated: true,
+      forceElevated: false,
       systemOverlayStyle:
           theme.brightness == Brightness.dark
               ? SystemUiOverlayStyle.light
@@ -401,6 +402,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           child: IconButton(
             onPressed: () => GoRouter.of(context).go('/profile'),
             icon: AvatarUtils.buildAvatar(
+              context: context,
               userName: _userName,
               profilePicture: _userProfilePicture,
               radius: 16,
@@ -427,24 +429,56 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        color: theme.brightness == Brightness.dark 
+            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : theme.colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // Clean Welcome Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _firstName.isNotEmpty
-                      ? 'Good $timeOfDay,\n$_firstName!'
-                      : 'Good $timeOfDay!',
+          // Section Header with icon - matching other screens style
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(
+                  Icons.waving_hand,
+                  size: 18,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Welcome',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              // Clean Welcome Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _firstName.isNotEmpty
+                          ? 'Good $timeOfDay,\n$_firstName!'
+                          : 'Good $timeOfDay!',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
@@ -495,6 +529,8 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
               ],
             ),
           ),
+            ],
+          ),
         ],
       ),
     );
@@ -504,18 +540,35 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Clean Section Header
+        // Section Header with icon
         Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Overview',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Icon(
+                      Icons.analytics_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Overview',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
               TextButton(
                 onPressed: () => GoRouter.of(context).go('/ai-insights'),
@@ -535,8 +588,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            color: theme.brightness == Brightness.dark 
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: 1,
@@ -544,6 +599,34 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           ),
           child: Column(
             children: [
+              // Section Header with icon - matching other screens style
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Icon(
+                      Icons.analytics_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Financial Overview',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
               // First row: Income and Expenses
               Row(
                 children: [
@@ -676,7 +759,6 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     );
   }
 
-
   Widget _buildTrendIndicator(ThemeData theme, String cardType) {
     String trendText = '';
     IconData trendIcon = Icons.remove_rounded;
@@ -748,6 +830,34 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         }
         break;
 
+      case 'goals':
+        if (_totalGoals > 0) {
+          final goalProgress =
+              _totalTargetAmount > 0
+                  ? _totalSavedAmount / _totalTargetAmount
+                  : 0.0;
+          if (goalProgress >= 0.5) {
+            trendText =
+                '${CurrencyFormatter.formatPercentage(goalProgress * 100)} completed';
+            trendIcon = Icons.trending_up_rounded;
+            trendColor = AppTheme.successColor;
+          } else if (goalProgress > 0) {
+            trendText =
+                '${CurrencyFormatter.formatPercentage(goalProgress * 100)} progress';
+            trendIcon = Icons.trending_up_rounded;
+            trendColor = AppTheme.warningColor;
+          } else {
+            trendText = 'Just getting started';
+            trendIcon = Icons.flag_rounded;
+            trendColor = AppTheme.warningColor;
+          }
+        } else {
+          trendText = 'Set your first goal';
+          trendIcon = Icons.add_rounded;
+          trendColor = AppTheme.warningColor;
+        }
+        break;
+
       default:
         trendText = 'This month';
         break;
@@ -772,8 +882,6 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   }
 
   Widget _buildGoalsCard(ThemeData theme) {
-    final goalProgress =
-        _totalTargetAmount > 0 ? _totalSavedAmount / _totalTargetAmount : 0.0;
     final color = AppTheme.warningColor;
 
     return Container(
@@ -825,7 +933,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Goals count or amount
+          // Goals count or amount - matching other cards format
           Text(
             _totalGoals > 0
                 ? '$_totalGoals ${_totalGoals == 1 ? 'Goal' : 'Goals'}'
@@ -838,40 +946,8 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
 
           const SizedBox(height: AppSpacing.sm),
 
-          // Progress or status
-          if (_totalGoals > 0 && _totalTargetAmount > 0) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: goalProgress.clamp(0.0, 1.0),
-                backgroundColor: color.withValues(alpha: 0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-                minHeight: 4,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${CurrencyFormatter.formatPercentage(goalProgress * 100)} completed',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ] else ...[
-            Row(
-              children: [
-                Icon(Icons.add_rounded, size: 14, color: color),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'Set your first goal',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          // Trend indicator - matching other cards
+          _buildTrendIndicator(theme, 'Goals'),
         ],
       ),
     );
@@ -914,8 +990,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              color: theme.brightness == Brightness.dark 
+                  ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                  : theme.colorScheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
                 color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                 width: 1,
@@ -1017,255 +1095,264 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Enhanced Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Transactions',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+        // Section Header with icon - matching other sections
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Icon(
+                      Icons.receipt_long_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Recent Transactions',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            TextButton.icon(
-              onPressed: () => GoRouter.of(context).go('/transactions'),
-              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-              label: const Text('View All'),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
+              TextButton(
+                onPressed: () => GoRouter.of(context).go('/transactions'),
+                child: Text(
+                  'View All',
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.md),
 
-        // Simple Transaction List
-        _isLoading
-            ? _buildTransactionSkeleton(theme)
-            : _error != null
-            ? _buildErrorWidget(theme)
-            : _recentTransactions.isEmpty
-            ? _buildEmptyTransactionsWidget(theme)
-            : _buildSimpleTransactionList(theme),
+        // Full-width Transaction Card - matching financial summary styling exactly
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: theme.brightness == Brightness.dark 
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child:
+              _isLoading
+                  ? _buildTransactionSkeletonContent(theme)
+                  : _error != null
+                  ? _buildErrorWidgetContent(theme)
+                  : _recentTransactions.isEmpty
+                  ? _buildEmptyTransactionsWidgetContent(theme)
+                  : _buildTransactionListContent(theme),
+        ),
       ],
     );
   }
 
-  Widget _buildTransactionSkeleton(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: List.generate(
-          3,
-          (index) => Padding(
-            padding: EdgeInsets.only(bottom: index < 2 ? AppSpacing.md : 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
+  Widget _buildTransactionSkeletonContent(ThemeData theme) {
+    return Column(
+      children: List.generate(
+        3,
+        (index) => Padding(
+          padding: EdgeInsets.only(bottom: index < 2 ? AppSpacing.md : 0),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.1,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.1,
                         ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Container(
-                        width: 120,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.05,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      width: 120,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.05,
                         ),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Container(
-                  width: 60,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Container(
+                width: 60,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSimpleTransactionList(ThemeData theme) {
+  Widget _buildTransactionListContent(ThemeData theme) {
     if (_recentTransactions.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: _recentTransactions.map(
-          (transaction) => _buildSimpleTransactionTile(theme, transaction),
-        ).toList(),
-      ),
+    return Column(
+      children:
+          _recentTransactions
+              .asMap()
+              .entries
+              .map(
+                (entry) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom:
+                        entry.key < _recentTransactions.length - 1
+                            ? AppSpacing.md
+                            : 0,
+                  ),
+                  child: _buildSimpleTransactionTile(theme, entry.value),
+                ),
+              )
+              .toList(),
     );
   }
 
-  Widget _buildSimpleTransactionTile(
-    ThemeData theme,
-    Transaction transaction,
-  ) {
+  Widget _buildSimpleTransactionTile(ThemeData theme, Transaction transaction) {
     final isIncome =
         transaction.type.toLowerCase() == 'income' || transaction.amount > 0;
     final color = isIncome ? AppTheme.successColor : AppTheme.errorColor;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          // Simple category icon
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Icon(
-              _getTransactionIcon(transaction.category),
-              color: color,
-              size: 16,
-            ),
+    return Row(
+      children: [
+        // Category icon
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
-          const SizedBox(width: AppSpacing.md),
+          child: Icon(
+            _getTransactionIcon(transaction.category),
+            color: color,
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
 
-          // Transaction description
-          Expanded(
-            child: Text(
-              transaction.description,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        // Transaction description
+        Expanded(
+          child: Text(
+            transaction.description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+        ),
 
-          // Amount
-          Text(
-            CurrencyFormatter.formatWithSign(transaction.amount),
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+        // Amount
+        Text(
+          CurrencyFormatter.formatWithSign(transaction.amount),
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-
-  Widget _buildErrorWidget(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 48,
+  Widget _buildErrorWidgetContent(ThemeData theme) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.error_outline_rounded,
+          size: 48,
+          color: theme.colorScheme.error,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Unable to load transactions',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
             color: theme.colorScheme.error,
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Unable to load transactions',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.error,
-            ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          _error!,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            _error!,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+      ],
     );
   }
 
-  Widget _buildEmptyTransactionsWidget(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 48,
-            color: theme.colorScheme.onSurfaceVariant,
+  Widget _buildEmptyTransactionsWidgetContent(ThemeData theme) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.receipt_long_outlined,
+          size: 48,
+          color: Colors.grey.withValues(alpha: 0.4),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'No transactions yet',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.withValues(alpha: 0.6),
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'No transactions yet',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Start by adding your first transaction',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey.withValues(alpha: 0.5),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Start by adding your first transaction',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1302,8 +1389,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            color: theme.brightness == Brightness.dark 
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: 1,
@@ -1412,29 +1501,45 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Enhanced Header with AI branding
+        // Section Header with icon - matching other sections
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'AI Financial Insights',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
-                  Text(
-                    'Powered by intelligent analysis',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 18,
+                    color: theme.colorScheme.onPrimaryContainer,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AI Financial Insights',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      'Powered by intelligent analysis',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             // Refresh insights button
             IconButton(
@@ -1457,8 +1562,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            color: theme.brightness == Brightness.dark 
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: 1,
@@ -1509,13 +1616,17 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
-          Icon(Icons.insights_rounded, size: 32, color: AppTheme.infoColor),
+          Icon(
+            Icons.insights_rounded,
+            size: 48,
+            color: Colors.grey.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'No insights yet',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
+              color: Colors.grey.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -1523,7 +1634,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
             'Add transactions to see AI insights',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: Colors.grey.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -1543,17 +1654,20 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       color = AppTheme.successColor;
       icon = Icons.savings_rounded;
       title = 'Great savings!';
-      subtitle = '${CurrencyFormatter.formatPercentage(savingsRate)} saved this month';
+      subtitle =
+          '${CurrencyFormatter.formatPercentage(savingsRate)} saved this month';
     } else if (savingsRate >= 10) {
       color = AppTheme.infoColor;
       icon = Icons.trending_up_rounded;
       title = 'Good progress';
-      subtitle = '${CurrencyFormatter.formatPercentage(savingsRate)} saved, aim for 20%';
+      subtitle =
+          '${CurrencyFormatter.formatPercentage(savingsRate)} saved, aim for 20%';
     } else if (savingsRate > 0) {
       color = AppTheme.warningColor;
       icon = Icons.lightbulb_outline_rounded;
       title = 'Room to improve';
-      subtitle = 'Only ${CurrencyFormatter.formatPercentage(savingsRate)} saved this month';
+      subtitle =
+          'Only ${CurrencyFormatter.formatPercentage(savingsRate)} saved this month';
     } else {
       color = AppTheme.errorColor;
       icon = Icons.warning_rounded;
@@ -1775,10 +1889,26 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     return FloatingActionButton(
       onPressed: () => GoRouter.of(context).go('/create-transaction'),
       tooltip: 'Add Transaction',
-      child: const Icon(Icons.add_rounded),
+      child: const Icon(Icons.receipt_long),
     );
   }
 
   @override
   bool get wantKeepAlive => true;
+}
+
+/// Custom FloatingActionButtonLocation that positions the FAB slightly above center docked
+class _CustomCenterFloatingActionButtonLocation
+    extends FloatingActionButtonLocation {
+  const _CustomCenterFloatingActionButtonLocation();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    // Get the center docked position
+    final Offset centerDocked = FloatingActionButtonLocation.centerDocked
+        .getOffset(scaffoldGeometry);
+
+    // Move it up by 16 pixels to clear the bottom navigation
+    return Offset(centerDocked.dx, centerDocked.dy - 16);
+  }
 }

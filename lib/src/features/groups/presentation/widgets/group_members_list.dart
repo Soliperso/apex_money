@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/models.dart';
 import '../providers/groups_provider.dart';
 import 'invite_member_dialog.dart';
+import '../../../../shared/theme/app_spacing.dart';
 
 class GroupMembersList extends StatelessWidget {
   final GroupWithMembersModel group;
@@ -16,14 +17,14 @@ class GroupMembersList extends StatelessWidget {
     final isAdmin = group.isUserAdmin(currentUserId);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(12), // Reduced padding to give more space
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header with member count
           _buildHeader(context, isAdmin),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
 
           // Active Members
           _buildMembersSection(
@@ -38,7 +39,7 @@ class GroupMembersList extends StatelessWidget {
 
           // Pending Members (if any)
           if (group.pendingMembers.isNotEmpty) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             _buildMembersSection(
               context,
               'Pending Members',
@@ -129,10 +130,10 @@ class GroupMembersList extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
               child: Text(
                 members.length.toString(),
@@ -146,7 +147,7 @@ class GroupMembersList extends StatelessWidget {
           ],
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
 
         // Members List
         ...members.map(
@@ -167,15 +168,20 @@ class GroupMembersList extends StatelessWidget {
     final isAdmin = member.role == GroupMemberRole.admin;
     final canManage = isCurrentUserAdmin && !isCurrentUser && !isAdmin;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: colorScheme.surfaceContainer,
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: IntrinsicHeight(
         // Ensure consistent height
         child: Padding(
-          padding: const EdgeInsets.all(12), // Reduced padding
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -192,7 +198,7 @@ class GroupMembersList extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
 
               // Member Info
               Expanded(
@@ -214,15 +220,15 @@ class GroupMembersList extends StatelessWidget {
                           ),
                         ),
                         if (isCurrentUser) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                             ),
                             child: Text(
                               'You',
@@ -338,14 +344,14 @@ class GroupMembersList extends StatelessWidget {
       decoration: BoxDecoration(
         color:
             isAdmin
-                ? colorScheme.primary.withOpacity(0.1)
-                : colorScheme.surfaceVariant.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(8),
+                ? colorScheme.primary.withValues(alpha: 0.1)
+                : colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         border: Border.all(
           color:
               isAdmin
-                  ? colorScheme.primary.withOpacity(0.3)
-                  : colorScheme.outline.withOpacity(0.3),
+                  ? colorScheme.primary.withValues(alpha: 0.3)
+                  : colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Text(
@@ -385,9 +391,9 @@ class GroupMembersList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         text,

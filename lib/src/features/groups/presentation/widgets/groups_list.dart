@@ -5,320 +5,247 @@ import '../providers/groups_provider.dart';
 import '../../data/models/models.dart';
 import 'invite_member_dialog.dart';
 import 'edit_group_dialog.dart';
+import '../../../../shared/theme/app_spacing.dart';
 
 class GroupsList extends StatelessWidget {
   const GroupsList({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Consumer<GroupsProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (provider.groups.isEmpty) {
-          return _buildEmptyState(context);
-        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Groups content in a glass-morphism container matching Settings/Info tabs
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark 
+                        ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                        : theme.colorScheme.surface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section Header with icon - matching Settings/Info tab style
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: Icon(
+                              Icons.group_rounded,
+                              size: 18,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Your Groups',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: provider.groups.length,
-          itemBuilder: (context, index) {
-            final group = provider.groups[index];
-            return _buildGroupCard(context, group);
-          },
+                      const SizedBox(height: 16),
+
+                      // Groups content
+                      Expanded(
+                        child: provider.groups.isEmpty
+                            ? _buildEmptyState(context)
+                            : _buildGroupsList(context, provider.groups),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.groups_outlined,
-              size: 120,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 32),
-            Text(
-              'No Groups Yet',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Create your first group to start sharing expenses with friends and family.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () => _showCreateGroupDialog(context),
-              icon: Icon(
-                Icons.add,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              label: Text(
-                'Create Your First Group',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.group_outlined,
+          size: 48,
+          color: Colors.grey.withValues(alpha: 0.4),
         ),
-      ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'No groups yet',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.withValues(alpha: 0.6),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Create your first group to start sharing expenses',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.grey.withValues(alpha: 0.5),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupsList(BuildContext context, List<GroupWithMembersModel> groups) {
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: groups.length,
+      itemBuilder: (context, index) {
+        final group = groups[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: index < groups.length - 1 ? AppSpacing.md : 0),
+          child: _buildGroupCard(context, group),
+        );
+      },
     );
   }
 
   Widget _buildGroupCard(BuildContext context, GroupWithMembersModel group) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
-            isDark
-                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : theme.colorScheme.surface.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(16),
-        border:
-            isDark
-                ? null
-                : Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.3,
-                  ),
-                  width: 1,
-                ),
-        boxShadow:
-            isDark
-                ? null
-                : [
-                  BoxShadow(
-                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         onTap: () => _navigateToGroupDetail(context, group),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Group avatar
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child:
-                    group.group.imageUrl != null
-                        ? ClipOval(
-                          child: Image.network(
-                            group.group.imageUrl!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) =>
-                                    _buildGroupInitials(
-                                      context,
-                                      group.group.name,
-                                    ),
-                          ),
-                        )
-                        : _buildGroupInitials(context, group.group.name),
+        child: Row(
+          children: [
+            // Group avatar
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
-              const SizedBox(width: 12),
-
-              // Group info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Group name
-                    Text(
-                      group.group.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Member count and currency in one clean line
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people,
-                          size: 16,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${group.members.length} member${group.members.length != 1 ? 's' : ''}',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          Icons.currency_exchange,
-                          size: 16,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          group.settings?.defaultCurrency ?? 'USD',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Show pending invitations if any
-                    if ((group.pendingInvitationsCount ?? 0) > 0) ...[
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 14,
-                            color: theme.colorScheme.tertiary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${group.pendingInvitationsCount ?? 0} pending invitation${(group.pendingInvitationsCount ?? 0) != 1 ? 's' : ''}',
-                            style: TextStyle(
-                              color: theme.colorScheme.tertiary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+              child: group.group.imageUrl != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      child: Image.network(
+                        group.group.imageUrl!,
+                        width: 20,
+                        height: 20,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(
+                              Icons.group_rounded,
+                              size: 20,
+                              color: theme.colorScheme.onPrimaryContainer,
                             ),
-                          ),
-                        ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
+                    )
+                  : Icon(
+                      Icons.group_rounded,
+                      size: 20,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+            ),
+            const SizedBox(width: AppSpacing.md),
 
-              // Action menu - simplified
-              PopupMenuButton<String>(
-                onSelected: (value) => _handleMenuAction(context, group, value),
-                icon: Icon(
-                  Icons.more_vert,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                itemBuilder:
-                    (context) => [
-                      const PopupMenuItem(
-                        value: 'view',
-                        child: Row(
-                          children: [
-                            Icon(Icons.visibility, size: 20),
-                            SizedBox(width: 12),
-                            Text('View Details'),
-                          ],
+            // Group info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Group name
+                  Text(
+                    group.group.name,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+
+                  // Member count and currency
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people_outline_rounded,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        '${group.members.length} member${group.members.length != 1 ? 's' : ''}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      if (group.isUserAdmin(
-                        context.read<GroupsProvider>().getCurrentUserId(),
-                      )) ...[
-                        const PopupMenuItem(
-                          value: 'invite',
-                          child: Row(
-                            children: [
-                              Icon(Icons.person_add, size: 20),
-                              SizedBox(width: 12),
-                              Text('Invite Members'),
-                            ],
-                          ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        width: 2,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          borderRadius: BorderRadius.circular(1),
                         ),
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 20),
-                              SizedBox(width: 12),
-                              Text('Edit Group'),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        group.group.defaultCurrency,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete,
-                                color: theme.colorScheme.error,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Delete Group',
-                                style: TextStyle(
-                                  color: theme.colorScheme.error,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ] else ...[
-                        PopupMenuItem(
-                          value: 'leave',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.exit_to_app,
-                                color: theme.colorScheme.tertiary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Leave Group',
-                                style: TextStyle(
-                                  color: theme.colorScheme.tertiary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            // Navigation arrow
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+          ],
         ),
       ),
     );
