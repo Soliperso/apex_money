@@ -105,7 +105,9 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
 
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -150,7 +152,9 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -367,7 +371,9 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -431,7 +437,9 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -501,7 +509,9 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
 
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        color: Theme.of(context).brightness == Brightness.dark 
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),

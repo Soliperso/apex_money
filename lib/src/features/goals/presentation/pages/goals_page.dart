@@ -446,8 +446,10 @@ class _GoalsPageState extends State<GoalsPage> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        color: theme.brightness == Brightness.dark 
+            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : theme.colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 1,
@@ -594,15 +596,17 @@ class _GoalsPageState extends State<GoalsPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        color: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color:
               goal.isCompleted
                   ? Colors.green.withValues(alpha: 0.3)
                   : goal.isOverdue
                   ? AppTheme.errorColor.withValues(alpha: 0.3)
-                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1,
         ),
       ),

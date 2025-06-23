@@ -655,7 +655,7 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
                         color:
                             _transactionType == 'income'
                                 ? Colors.white
-                                : Colors.green,
+                                : AppTheme.successColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -694,7 +694,7 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
             color:
                 _transactionType == 'expense'
                     ? colorScheme.error
-                    : Colors.green,
+                    : AppTheme.successColor,
           ),
           decoration: InputDecoration(
             hintText: '0.00',
@@ -707,12 +707,14 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
                   color:
                       _transactionType == 'expense'
                           ? colorScheme.error
-                          : Colors.green,
+                          : AppTheme.successColor,
                 ),
               ),
             ),
             filled: true,
-            fillColor: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+            fillColor: Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -723,7 +725,7 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
                 color:
                     _transactionType == 'expense'
                         ? colorScheme.error
-                        : Colors.green,
+                        : AppTheme.successColor,
                 width: 2,
               ),
             ),
@@ -757,7 +759,9 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
               color: colorScheme.onSurfaceVariant,
             ),
             filled: true,
-            fillColor: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+            fillColor: Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -787,7 +791,9 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
         const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
           ),
           child: DropdownButtonFormField<String>(
@@ -897,7 +903,9 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                  : colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -948,7 +956,9 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
               color: colorScheme.onSurfaceVariant,
             ),
             filled: true,
-            fillColor: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+            fillColor: Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -968,7 +978,9 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+            : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

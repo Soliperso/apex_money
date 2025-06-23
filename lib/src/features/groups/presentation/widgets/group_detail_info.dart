@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/models.dart';
 import '../../../../shared/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_gradient_background.dart';
 
 class GroupDetailInfo extends StatelessWidget {
   final GroupWithMembersModel group;
@@ -9,30 +10,32 @@ class GroupDetailInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Group Header Card
-          _buildGroupHeaderCard(context),
+    return AppGradientBackground(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Group Header Card
+            _buildGroupHeaderCard(context),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Statistics Cards
-          _buildStatisticsSection(context),
+            // Statistics Cards
+            _buildStatisticsSection(context),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Description Section
-          if (group.group.description?.isNotEmpty == true)
-            _buildDescriptionSection(context),
+            // Description Section
+            if (group.group.description?.isNotEmpty == true)
+              _buildDescriptionSection(context),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Activity Section (placeholder for future)
-          _buildActivitySection(context),
-        ],
+            // Activity Section (placeholder for future)
+            _buildActivitySection(context),
+          ],
+        ),
       ),
     );
   }
@@ -43,11 +46,12 @@ class GroupDetailInfo extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -185,10 +189,7 @@ class GroupDetailInfo extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: color.withValues(alpha: 0.4),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -214,11 +215,12 @@ class GroupDetailInfo extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -326,10 +328,11 @@ class GroupDetailInfo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(8),
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1,
@@ -376,11 +379,12 @@ class GroupDetailInfo extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -436,11 +440,12 @@ class GroupDetailInfo extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -483,7 +488,7 @@ class GroupDetailInfo extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: colorScheme.surfaceVariant.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
             ),
             child: Column(

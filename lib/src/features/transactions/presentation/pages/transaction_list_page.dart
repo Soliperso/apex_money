@@ -566,7 +566,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget _buildTransactionCard(Transaction transaction, int index) {
     final theme = Theme.of(context);
     final isExpense = transaction.amount < 0;
-    final color = isExpense ? AppTheme.errorColor : theme.colorScheme.primary;
+    final color = isExpense ? AppTheme.errorColor : AppTheme.successColor;
     final icon = _getTransactionIcon(transaction.category);
     final isSelected = _selectedTransactionIds.contains(transaction.id);
 
@@ -811,7 +811,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         final colorScheme = theme.colorScheme;
         final isExpense = transaction.amount < 0;
         final amountColor =
-            isExpense ? AppTheme.errorColor : colorScheme.primary;
+            isExpense ? AppTheme.errorColor : AppTheme.successColor;
 
         return Container(
           width: double.infinity,
@@ -1487,7 +1487,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
           margin: const EdgeInsets.all(24),
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.3),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),

@@ -171,10 +171,12 @@ class GroupMembersList extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
