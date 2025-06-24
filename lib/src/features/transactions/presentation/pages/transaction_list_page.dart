@@ -8,6 +8,8 @@ import '../../../dashboard/data/services/dashboard_sync_service.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/main_navigation_wrapper.dart';
+import '../../../../shared/widgets/app_settings_menu.dart';
 import '../../../../shared/theme/app_spacing.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/theme/theme_provider.dart';
@@ -310,7 +312,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     // Navigate to create transaction page with edit mode and pre-filled data
     if (mounted) {
       try {
-        GoRouter.of(context).go(
+        GoRouter.of(context).push(
           '/create-transaction',
           extra: {'mode': 'edit', 'transaction': transaction},
         );
@@ -455,8 +457,16 @@ class _TransactionListPageState extends State<TransactionListPage> {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      body: AppGradientBackground(
+    return MainNavigationWrapper(
+      currentIndex: 1,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => GoRouter.of(context).go('/create-transaction'),
+        tooltip: 'Add Transaction',
+        child: const Icon(Icons.add),
+      ),
+      floatingActionButtonLocation:
+          const CustomCenterFloatingActionButtonLocation(),
+      child: AppGradientBackground(
         child: CustomScrollView(
           slivers: [
             // Modern SliverAppBar
@@ -552,14 +562,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => GoRouter.of(context).go('/create-transaction'),
-        tooltip: 'Add Transaction',
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation:
-          const _CustomCenterFloatingActionButtonLocation(),
-      bottomNavigationBar: _buildBottomNavigation(theme),
     );
   }
 
@@ -1232,87 +1234,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   onPressed: () {}, // TODO: Implement search
                   tooltip: 'Search Transactions',
                 ),
+                AppSettingsMenu(iconColor: iconColor),
               ],
     );
   }
 
-  Widget _buildBottomNavigation(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppSpacing.radiusXl),
-          topRight: Radius.circular(AppSpacing.radiusXl),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppSpacing.radiusXl),
-          topRight: Radius.circular(AppSpacing.radiusXl),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: 1,
-          selectedItemColor: theme.colorScheme.primary,
-          unselectedItemColor: theme.colorScheme.onSurfaceVariant,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_rounded),
-              label: 'Transactions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.flag_rounded),
-              label: 'Goals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.group_rounded),
-              label: 'Groups',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.insights_rounded),
-              label: 'AI Insights',
-            ),
-          ],
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                GoRouter.of(context).go('/dashboard');
-                break;
-              case 1:
-                // Already on transactions page
-                break;
-              case 2:
-                GoRouter.of(context).go('/goals');
-                break;
-              case 3:
-                GoRouter.of(context).go('/groups');
-                break;
-              case 4:
-                GoRouter.of(context).go('/ai-insights');
-                break;
-            }
-          },
-        ),
-      ),
-    );
-  }
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
@@ -2062,18 +1988,3 @@ class _EnhancedFilterBottomSheetState
   }
 }
 
-/// Custom FloatingActionButtonLocation that positions the FAB slightly above center docked
-class _CustomCenterFloatingActionButtonLocation
-    extends FloatingActionButtonLocation {
-  const _CustomCenterFloatingActionButtonLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    // Get the center docked position
-    final Offset centerDocked = FloatingActionButtonLocation.centerDocked
-        .getOffset(scaffoldGeometry);
-
-    // Move it up by 16 pixels to clear the bottom navigation
-    return Offset(centerDocked.dx, centerDocked.dy - 16);
-  }
-}

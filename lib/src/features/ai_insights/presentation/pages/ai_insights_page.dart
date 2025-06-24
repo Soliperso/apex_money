@@ -4,6 +4,8 @@ import '../../../transactions/data/services/transaction_service.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../goals/data/services/goal_service.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/widgets/main_navigation_wrapper.dart';
+import '../../../../shared/widgets/app_settings_menu.dart';
 import '../../../../shared/theme/app_spacing.dart';
 
 class AIInsightsPage extends StatefulWidget {
@@ -41,8 +43,9 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      body: AppGradientBackground(
+    return MainNavigationWrapper(
+      currentIndex: 4,
+      child: AppGradientBackground(
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
@@ -82,6 +85,9 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
                   },
                   tooltip: 'Refresh Insights',
                 ),
+                AppSettingsMenu(
+                  iconColor: isDark ? colorScheme.onSurface : Colors.white,
+                ),
               ],
             ),
             SliverToBoxAdapter(
@@ -103,94 +109,6 @@ class _AIInsightsPageState extends State<AIInsightsPage> {
               ),
             ),
           ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              spreadRadius: 0,
-              blurRadius: 16,
-              offset: const Offset(0, -4),
-            ),
-          ],
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 1,
-            ),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-          child: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            currentIndex: 4,
-            selectedItemColor: colorScheme.primary,
-            unselectedItemColor: colorScheme.onSurfaceVariant,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedFontSize: 12,
-            unselectedFontSize: 11,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              height: 1.2,
-            ),
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard_rounded),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet_rounded),
-                label: 'Transactions',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.flag_rounded),
-                label: 'Goals',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.group_rounded),
-                label: 'Groups',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.insights_rounded),
-                label: 'AI Insights',
-              ),
-            ],
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  GoRouter.of(context).go('/dashboard');
-                  break;
-                case 1:
-                  GoRouter.of(context).go('/transactions');
-                  break;
-                case 2:
-                  GoRouter.of(context).go('/goals');
-                  break;
-                case 3:
-                  GoRouter.of(context).go('/groups');
-                  break;
-                case 4:
-                  // Already on AI insights page
-                  break;
-              }
-            },
-          ),
         ),
       ),
     );

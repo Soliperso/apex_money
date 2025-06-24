@@ -15,6 +15,8 @@ import '../../../../shared/theme/app_spacing.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/widgets/main_navigation_wrapper.dart';
+import '../../../../shared/widgets/app_settings_menu.dart';
 
 class ModernDashboardPage extends StatefulWidget {
   const ModernDashboardPage({super.key});
@@ -271,8 +273,12 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      body: AppGradientBackground(
+    return MainNavigationWrapper(
+      currentIndex: 0,
+      floatingActionButton: _buildFloatingActionButton(theme),
+      floatingActionButtonLocation:
+          const CustomCenterFloatingActionButtonLocation(),
+      child: AppGradientBackground(
         child: RefreshIndicator(
           onRefresh: _loadData,
           child: CustomScrollView(
@@ -323,14 +329,6 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           ),
         ),
       ),
-
-      // Modern Bottom Navigation
-      bottomNavigationBar: _buildBottomNavigation(theme),
-
-      // Modern FAB
-      floatingActionButton: _buildFloatingActionButton(theme),
-      floatingActionButtonLocation:
-          const _CustomCenterFloatingActionButtonLocation(),
     );
   }
 
@@ -399,19 +397,25 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
             right: AppSpacing.md,
             left: AppSpacing.xs,
           ),
-          child: IconButton(
-            onPressed: () => GoRouter.of(context).go('/profile'),
-            icon: AvatarUtils.buildAvatar(
-              context: context,
-              userName: _userName,
-              profilePicture: _userProfilePicture,
-              radius: 16,
-              fontSize: 14,
-              style: AvatarStyle.standard,
+          child: InkWell(
+            onTap: () => context.go('/profile'),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              child: AvatarUtils.buildAvatar(
+                context: context,
+                userName: _userName,
+                profilePicture: _userProfilePicture,
+                radius: 16,
+                fontSize: 14,
+                style: AvatarStyle.standard,
+              ),
             ),
-            tooltip: 'Profile',
           ),
         ),
+
+        // Settings Menu
+        AppSettingsMenu(iconColor: iconColor),
       ],
     );
   }
@@ -1810,82 +1814,8 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     );
   }
 
-  Widget _buildBottomNavigation(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppSpacing.radiusXl),
-          topRight: Radius.circular(AppSpacing.radiusXl),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow,
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppSpacing.radiusXl),
-          topRight: Radius.circular(AppSpacing.radiusXl),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: 0,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_rounded),
-              label: 'Transactions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.flag_rounded),
-              label: 'Goals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.group_rounded),
-              label: 'Groups',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.insights_rounded),
-              label: 'AI Insights',
-            ),
-          ],
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                // Already on dashboard
-                break;
-              case 1:
-                GoRouter.of(context).go('/transactions');
-                break;
-              case 2:
-                GoRouter.of(context).go('/goals');
-                break;
-              case 3:
-                GoRouter.of(context).go('/groups');
-                break;
-              case 4:
-                GoRouter.of(context).go('/ai-insights');
-                break;
-            }
-          },
-        ),
-      ),
-    );
-  }
 
-  Widget _buildFloatingActionButton(ThemeData theme) {
+  FloatingActionButton _buildFloatingActionButton(ThemeData theme) {
     return FloatingActionButton(
       onPressed: () => GoRouter.of(context).go('/create-transaction'),
       tooltip: 'Add Transaction',
@@ -1897,18 +1827,3 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   bool get wantKeepAlive => true;
 }
 
-/// Custom FloatingActionButtonLocation that positions the FAB slightly above center docked
-class _CustomCenterFloatingActionButtonLocation
-    extends FloatingActionButtonLocation {
-  const _CustomCenterFloatingActionButtonLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    // Get the center docked position
-    final Offset centerDocked = FloatingActionButtonLocation.centerDocked
-        .getOffset(scaffoldGeometry);
-
-    // Move it up by 16 pixels to clear the bottom navigation
-    return Offset(centerDocked.dx, centerDocked.dy - 16);
-  }
-}

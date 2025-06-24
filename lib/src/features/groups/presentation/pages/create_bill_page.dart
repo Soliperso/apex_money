@@ -5,6 +5,7 @@ import '../../data/models/models.dart';
 import '../../data/services/bill_service.dart';
 import '../../data/services/bill_calculation_service.dart';
 import '../providers/groups_provider.dart';
+import '../../../../shared/widgets/app_gradient_background.dart';
 
 class CreateBillPage extends StatefulWidget {
   final String groupId;
@@ -139,9 +140,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
     if (!_formKey.currentState!.validate()) return;
     if (!_validateSplit()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fix the split configuration'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please fix the split configuration'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
       return;
@@ -180,9 +181,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bill created successfully!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Bill created successfully!'),
+            backgroundColor: Colors.green, // Keep green for success
           ),
         );
         GoRouter.of(context).pop();
@@ -192,7 +193,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error creating bill: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -205,12 +206,75 @@ class _CreateBillPageState extends State<CreateBillPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Create Bill'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Breadcrumb navigation
+              Row(
+                children: [
+                  Icon(
+                    Icons.group,
+                    size: 14,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Groups',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 14,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                  Text(
+                    'Loading...',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 14,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                ],
+              ),
+              // Page title
+              Text(
+                'Create Bill',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: isDark ? colorScheme.onSurface : Colors.white,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: isDark ? colorScheme.surface : colorScheme.primary,
+          foregroundColor: isDark ? colorScheme.onSurface : Colors.white,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -219,9 +283,68 @@ class _CreateBillPageState extends State<CreateBillPage> {
     if (_group == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Create Bill'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Breadcrumb navigation
+              Row(
+                children: [
+                  Icon(
+                    Icons.group,
+                    size: 14,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Groups',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 14,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                  Text(
+                    'Not Found',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 14,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                ],
+              ),
+              // Page title
+              Text(
+                'Create Bill',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: isDark ? colorScheme.onSurface : Colors.white,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: isDark ? colorScheme.surface : colorScheme.primary,
+          foregroundColor: isDark ? colorScheme.onSurface : Colors.white,
         ),
         body: const Center(
           child: Text('Group not found'),
@@ -231,40 +354,93 @@ class _CreateBillPageState extends State<CreateBillPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Bill'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => GoRouter.of(context).pop(),
+          tooltip: 'Back to ${_group?.group.name ?? "Group"}',
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Breadcrumb navigation
+            Row(
+              children: [
+                const Icon(
+                  Icons.group,
+                  size: 14,
+                  color: Colors.white70,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Groups',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 14,
+                  color: Colors.white70,
+                ),
+                Flexible(
+                  child: Text(
+                    _group?.group.name ?? 'Loading...',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark 
+                        ? colorScheme.onSurface.withValues(alpha: 0.7)
+                        : Colors.white.withValues(alpha: 0.7),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 14,
+                  color: Colors.white70,
+                ),
+              ],
+            ),
+            // Page title
+            const Text(
+              'Create Bill',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
         actions: [
           TextButton(
             onPressed: _isCreatingBill ? null : _createBill,
             child: _isCreatingBill
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: isDark ? colorScheme.onSurface : Colors.white,
                     ),
                   )
-                : const Text(
+                : Text(
                     'Create',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: isDark ? colorScheme.onSurface : Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.blueAccent, Colors.white],
-            stops: [0.0, 0.3],
-          ),
-        ),
+      body: AppGradientBackground(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -382,10 +558,10 @@ class _CreateBillPageState extends State<CreateBillPage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -398,7 +574,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
         subtitle: Text(member.userEmail ?? ''),
         value: isSelected,
         onChanged: (selected) => _onMemberSelectionChanged(member, selected ?? false),
-        activeColor: Colors.blueAccent,
+        activeColor: Theme.of(context).colorScheme.primary,
       );
     }).toList();
   }
@@ -490,7 +666,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
       );
 
       return Card(
-        color: Colors.blue.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -540,12 +716,12 @@ class _CreateBillPageState extends State<CreateBillPage> {
       );
     } catch (e) {
       return Card(
-        color: Colors.red.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
             'Split Error: $e',
-            style: const TextStyle(color: Colors.red),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ),
       );

@@ -296,8 +296,8 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
         // Add a small delay before navigation to prevent any UI conflicts
         Future.delayed(const Duration(milliseconds: 100), () {
           if (mounted) {
-            // Use GoRouter to navigate back to transactions page
-            GoRouter.of(context).go('/transactions');
+            // Navigate back to previous screen
+            context.pop();
           }
         });
       }
@@ -409,7 +409,7 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
                     children: [
                       IconButton(
                         onPressed:
-                            () => GoRouter.of(context).go('/transactions'),
+                            () => context.pop(),
                         icon: Icon(
                           Icons.arrow_back_ios_new,
                           color:

@@ -150,7 +150,7 @@ class _GoalCreatePageState extends State<GoalCreatePage> {
         );
 
         // Navigate back to goals page
-        context.go('/goals');
+        context.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -194,7 +194,7 @@ class _GoalCreatePageState extends State<GoalCreatePage> {
                 ),
               ),
               leading: IconButton(
-                onPressed: () => context.go('/goals'),
+                onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back),
                 color: Colors.white,
               ),

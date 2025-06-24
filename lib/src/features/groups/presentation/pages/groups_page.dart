@@ -6,6 +6,8 @@ import '../widgets/groups_list.dart';
 import '../widgets/create_group_fab.dart';
 import '../widgets/group_invitations_banner.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/widgets/main_navigation_wrapper.dart';
+import '../../../../shared/widgets/app_settings_menu.dart';
 import '../../../../shared/theme/app_spacing.dart';
 
 class GroupsPage extends StatefulWidget {
@@ -31,8 +33,12 @@ class _GroupsPageState extends State<GroupsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      body: AppGradientBackground(
+    return MainNavigationWrapper(
+      currentIndex: 3,
+      floatingActionButton: const CreateGroupFab(),
+      floatingActionButtonLocation:
+          const CustomCenterFloatingActionButtonLocation(),
+      child: AppGradientBackground(
         child: Consumer<GroupsProvider>(
           builder: (context, provider, child) {
             return RefreshIndicator(
@@ -77,6 +83,11 @@ class _GroupsPageState extends State<GroupsPage> {
                           provider.loadGroups();
                           provider.loadInvitations();
                         },
+                      ),
+                      AppSettingsMenu(
+                        iconColor: theme.brightness == Brightness.dark
+                            ? theme.colorScheme.onSurface
+                            : Colors.white,
                       ),
                     ],
                   ),
@@ -162,100 +173,7 @@ class _GroupsPageState extends State<GroupsPage> {
           },
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(AppSpacing.radiusXl),
-            topRight: Radius.circular(AppSpacing.radiusXl),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-              spreadRadius: 0,
-              blurRadius: 16,
-              offset: const Offset(0, -4),
-            ),
-          ],
-          border: Border(
-            top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(AppSpacing.radiusXl),
-            topRight: Radius.circular(AppSpacing.radiusXl),
-          ),
-          child: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            currentIndex: 3,
-            selectedItemColor: theme.colorScheme.primary,
-            unselectedItemColor: theme.colorScheme.onSurfaceVariant,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dashboard_rounded),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet_rounded),
-                label: 'Transactions',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.flag_rounded),
-                label: 'Goals',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.group_rounded),
-                label: 'Groups',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.insights_rounded),
-                label: 'AI Insights',
-              ),
-            ],
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  context.go('/dashboard');
-                  break;
-                case 1:
-                  context.go('/transactions');
-                  break;
-                case 2:
-                  context.go('/goals');
-                  break;
-                case 3:
-                  // Already on groups page
-                  break;
-                case 4:
-                  context.go('/ai-insights');
-                  break;
-              }
-            },
-          ),
-        ),
-      ),
-      floatingActionButton: const CreateGroupFab(),
-      floatingActionButtonLocation:
-          const _CustomCenterFloatingActionButtonLocation(),
     );
   }
 }
 
-/// Custom FloatingActionButtonLocation that positions the FAB slightly above center docked
-class _CustomCenterFloatingActionButtonLocation
-    extends FloatingActionButtonLocation {
-  const _CustomCenterFloatingActionButtonLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    // Get the center docked position
-    final Offset centerDocked = FloatingActionButtonLocation.centerDocked
-        .getOffset(scaffoldGeometry);
-
-    // Move it up by 16 pixels to clear the bottom navigation
-    return Offset(centerDocked.dx, centerDocked.dy - 16);
-  }
-}

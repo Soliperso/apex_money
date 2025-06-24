@@ -329,7 +329,7 @@ class _EnhancedGoalCreatePageState extends State<EnhancedGoalCreatePage> {
         );
 
         // Navigate back
-        GoRouter.of(context).go('/goals');
+        context.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -369,7 +369,7 @@ class _EnhancedGoalCreatePageState extends State<EnhancedGoalCreatePage> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => GoRouter.of(context).go('/goals'),
+                      onPressed: () => context.pop(),
                       icon: Icon(
                         Icons.arrow_back,
                         color:

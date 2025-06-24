@@ -77,12 +77,49 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
                 forceElevated: false,
-                title: Text(
-                  'Loading...',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? colorScheme.onSurface : Colors.white,
-                  ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Breadcrumb navigation
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group,
+                          size: 16,
+                          color: isDark 
+                              ? colorScheme.onSurface.withValues(alpha: 0.7)
+                              : Colors.white.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Groups',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark 
+                                ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                : Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: isDark 
+                              ? colorScheme.onSurface.withValues(alpha: 0.7)
+                              : Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                    // Loading text
+                    Text(
+                      'Loading...',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: isDark ? colorScheme.onSurface : Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SliverFillRemaining(
@@ -108,12 +145,49 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
                 forceElevated: false,
-                title: Text(
-                  'Group Not Found',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? colorScheme.onSurface : Colors.white,
-                  ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Breadcrumb navigation
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group,
+                          size: 16,
+                          color: isDark 
+                              ? colorScheme.onSurface.withValues(alpha: 0.7)
+                              : Colors.white.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Groups',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark 
+                                ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                : Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 16,
+                          color: isDark 
+                              ? colorScheme.onSurface.withValues(alpha: 0.7)
+                              : Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                    // Error text
+                    Text(
+                      'Group Not Found',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: isDark ? colorScheme.onSurface : Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SliverFillRemaining(
@@ -185,12 +259,49 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                       onPressed: () => Navigator.of(context).pop(),
                       tooltip: 'Back to Groups',
                     ),
-                    title: Text(
-                      _group!.group.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? colorScheme.onSurface : Colors.white,
-                      ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Breadcrumb navigation
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.group,
+                              size: 16,
+                              color: isDark 
+                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Groups',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark 
+                                    ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                    : Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 16,
+                              color: isDark 
+                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ],
+                        ),
+                        // Group name
+                        Text(
+                          _group!.group.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: isDark ? colorScheme.onSurface : Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                     centerTitle: false,
                     actions: [
@@ -388,7 +499,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         content: Text('Group deleted successfully'),
                       ),
                     );
-                    context.go('/groups'); // Navigate back to groups page
+                    context.pop(); // Navigate back to groups page
                   } else if (mounted && provider.hasError) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -435,7 +546,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Left group successfully')),
                     );
-                    context.go('/groups'); // Navigate back to groups page
+                    context.pop(); // Navigate back to groups page
                   } else if (mounted && provider.hasError) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

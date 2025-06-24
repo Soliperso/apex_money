@@ -6,6 +6,8 @@ import '../../data/services/goal_service.dart';
 import '../../data/models/goal_model.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import '../../../../shared/widgets/main_navigation_wrapper.dart';
+import '../../../../shared/widgets/app_settings_menu.dart';
 import '../../../../shared/theme/app_spacing.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
@@ -174,8 +176,12 @@ class _GoalsPageState extends State<GoalsPage> {
     final theme = Theme.of(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      body: AppGradientBackground(
+    return MainNavigationWrapper(
+      currentIndex: 2,
+      floatingActionButton: _buildFloatingActionButton(theme),
+      floatingActionButtonLocation:
+          const CustomCenterFloatingActionButtonLocation(),
+      child: AppGradientBackground(
         child: RefreshIndicator(
           onRefresh: () async {
             _loadGoals();
@@ -208,14 +214,6 @@ class _GoalsPageState extends State<GoalsPage> {
           ),
         ),
       ),
-
-      // Modern Bottom Navigation
-      bottomNavigationBar: _buildBottomNavigation(theme),
-
-      // Modern FAB
-      floatingActionButton: _buildFloatingActionButton(theme),
-      floatingActionButtonLocation:
-          const _CustomCenterFloatingActionButtonLocation(),
     );
   }
 
@@ -272,6 +270,9 @@ class _GoalsPageState extends State<GoalsPage> {
           color: iconColor,
           tooltip: 'Refresh Goals',
         ),
+
+        // Settings Menu
+        AppSettingsMenu(iconColor: iconColor),
       ],
     );
   }
@@ -356,82 +357,8 @@ class _GoalsPageState extends State<GoalsPage> {
     );
   }
 
-  Widget _buildBottomNavigation(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppSpacing.radiusXl),
-          topRight: Radius.circular(AppSpacing.radiusXl),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow,
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppSpacing.radiusXl),
-          topRight: Radius.circular(AppSpacing.radiusXl),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: 2,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_rounded),
-              label: 'Transactions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.flag_rounded),
-              label: 'Goals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.group_rounded),
-              label: 'Groups',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.insights_rounded),
-              label: 'AI Insights',
-            ),
-          ],
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                context.go('/dashboard');
-                break;
-              case 1:
-                context.go('/transactions');
-                break;
-              case 2:
-                // Already on goals page
-                break;
-              case 3:
-                context.go('/groups');
-                break;
-              case 4:
-                context.go('/ai-insights');
-                break;
-            }
-          },
-        ),
-      ),
-    );
-  }
 
-  Widget _buildFloatingActionButton(ThemeData theme) {
+  FloatingActionButton _buildFloatingActionButton(ThemeData theme) {
     return FloatingActionButton(
       onPressed: () => context.go('/create-goal'),
       tooltip: 'Create Goal',
@@ -651,7 +578,7 @@ class _GoalsPageState extends State<GoalsPage> {
                   onSelected: (value) {
                     switch (value) {
                       case 'edit':
-                        context.go('/create-goal', extra: goal);
+                        context.push('/create-goal', extra: goal);
                         break;
                       case 'update':
                         _showUpdateProgressDialog(goal);
@@ -916,18 +843,3 @@ class _GoalsPageState extends State<GoalsPage> {
   }
 }
 
-/// Custom FloatingActionButtonLocation that positions the FAB slightly above center docked
-class _CustomCenterFloatingActionButtonLocation
-    extends FloatingActionButtonLocation {
-  const _CustomCenterFloatingActionButtonLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    // Get the center docked position
-    final Offset centerDocked = FloatingActionButtonLocation.centerDocked
-        .getOffset(scaffoldGeometry);
-
-    // Move it up by 16 pixels to clear the bottom navigation
-    return Offset(centerDocked.dx, centerDocked.dy - 16);
-  }
-}
