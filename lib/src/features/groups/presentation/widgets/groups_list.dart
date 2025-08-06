@@ -13,7 +13,7 @@ class GroupsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Consumer<GroupsProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
@@ -31,12 +31,17 @@ class GroupsList extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark 
-                        ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                        : theme.colorScheme.surface.withValues(alpha: 0.5),
+                    color:
+                        theme.brightness == Brightness.dark
+                            ? theme.colorScheme.surfaceContainer.withValues(
+                              alpha: 0.6,
+                            )
+                            : theme.colorScheme.surface.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     border: Border.all(
-                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.3,
+                      ),
                       width: 1,
                     ),
                   ),
@@ -50,7 +55,9 @@ class GroupsList extends StatelessWidget {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
                             ),
                             child: Icon(
                               Icons.group_rounded,
@@ -74,9 +81,10 @@ class GroupsList extends StatelessWidget {
 
                       // Groups content
                       Expanded(
-                        child: provider.groups.isEmpty
-                            ? _buildEmptyState(context)
-                            : _buildGroupsList(context, provider.groups),
+                        child:
+                            provider.groups.isEmpty
+                                ? Center(child: _buildEmptyState(context))
+                                : _buildGroupsList(context, provider.groups),
                       ),
                     ],
                   ),
@@ -92,7 +100,7 @@ class GroupsList extends StatelessWidget {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           Icons.group_outlined,
@@ -119,14 +127,19 @@ class GroupsList extends StatelessWidget {
     );
   }
 
-  Widget _buildGroupsList(BuildContext context, List<GroupWithMembersModel> groups) {
+  Widget _buildGroupsList(
+    BuildContext context,
+    List<GroupWithMembersModel> groups,
+  ) {
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemCount: groups.length,
       itemBuilder: (context, index) {
         final group = groups[index];
         return Padding(
-          padding: EdgeInsets.only(bottom: index < groups.length - 1 ? AppSpacing.md : 0),
+          padding: EdgeInsets.only(
+            bottom: index < groups.length - 1 ? AppSpacing.md : 0,
+          ),
           child: _buildGroupCard(context, group),
         );
       },
@@ -140,9 +153,12 @@ class GroupsList extends StatelessWidget {
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color:
+            theme.brightness == Brightness.dark
+                ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.4,
+                ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
@@ -154,37 +170,6 @@ class GroupsList extends StatelessWidget {
         onTap: () => _navigateToGroupDetail(context, group),
         child: Row(
           children: [
-            // Group avatar
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: group.group.imageUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      child: Image.network(
-                        group.group.imageUrl!,
-                        width: 20,
-                        height: 20,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(
-                              Icons.group_rounded,
-                              size: 20,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                      ),
-                    )
-                  : Icon(
-                      Icons.group_rounded,
-                      size: 20,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-
             // Group info
             Expanded(
               child: Column(
@@ -266,7 +251,7 @@ class GroupsList extends StatelessWidget {
     BuildContext context,
     GroupWithMembersModel group,
   ) {
-    context.push('/groups/${group.group.id}');
+    context.go('/groups/${group.group.id}');
   }
 
   void _handleMenuAction(
@@ -326,12 +311,12 @@ class GroupsList extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.deleteGroup(group.group.id!);
                   if (success && context.mounted) {
@@ -366,12 +351,12 @@ class GroupsList extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.leaveGroup(group.group.id!);
                   if (success && context.mounted) {

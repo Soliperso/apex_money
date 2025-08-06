@@ -35,22 +35,24 @@ class BillModel {
       groupId: json['group_id']?.toString() ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      totalAmount: (json['total_amount'] is int)
-          ? (json['total_amount'] as int).toDouble()
-          : (json['total_amount'] as double? ?? 0.0),
+      totalAmount:
+          (json['total_amount'] is int)
+              ? (json['total_amount'] as int).toDouble()
+              : (json['total_amount'] as double? ?? 0.0),
       currency: json['currency'] ?? 'USD',
       paidByUserId: json['paid_by_user_id']?.toString() ?? '',
-      dateCreated: json['date_created'] != null
-          ? DateTime.parse(json['date_created'])
-          : DateTime.now(),
-      dueDate: json['due_date'] != null
-          ? DateTime.parse(json['due_date'])
-          : null,
+      dateCreated:
+          json['date_created'] != null
+              ? DateTime.parse(json['date_created'])
+              : DateTime.now(),
+      dueDate:
+          json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
       status: json['status'] ?? 'active',
       splitMethod: json['split_method'] ?? 'equal',
-      splits: (json['splits'] as List<dynamic>? ?? [])
-          .map((split) => BillSplitModel.fromJson(split))
-          .toList(),
+      splits:
+          (json['splits'] as List<dynamic>? ?? [])
+              .map((split) => BillSplitModel.fromJson(split))
+              .toList(),
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
@@ -110,8 +112,10 @@ class BillSplitModel {
   final String? id;
   final String billId;
   final String userId;
+  final String? userName; // Added to match DB model
   final double amount;
   final double percentage;
+  final bool isCustomAmount; // Added to match DB model
   final bool isPaid;
   final DateTime? paidDate;
   final String? paymentMethod;
@@ -120,8 +124,10 @@ class BillSplitModel {
     this.id,
     required this.billId,
     required this.userId,
+    this.userName,
     required this.amount,
     required this.percentage,
+    this.isCustomAmount = false,
     this.isPaid = false,
     this.paidDate,
     this.paymentMethod,
@@ -132,16 +138,19 @@ class BillSplitModel {
       id: json['id']?.toString(),
       billId: json['bill_id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
-      amount: (json['amount'] is int)
-          ? (json['amount'] as int).toDouble()
-          : (json['amount'] as double? ?? 0.0),
-      percentage: (json['percentage'] is int)
-          ? (json['percentage'] as int).toDouble()
-          : (json['percentage'] as double? ?? 0.0),
+      userName: json['user_name']?.toString(),
+      amount:
+          (json['amount'] is int)
+              ? (json['amount'] as int).toDouble()
+              : (json['amount'] as double? ?? 0.0),
+      percentage:
+          (json['percentage'] is int)
+              ? (json['percentage'] as int).toDouble()
+              : (json['percentage'] as double? ?? 0.0),
+      isCustomAmount: json['is_custom_amount'] ?? false,
       isPaid: json['is_paid'] ?? false,
-      paidDate: json['paid_date'] != null
-          ? DateTime.parse(json['paid_date'])
-          : null,
+      paidDate:
+          json['paid_date'] != null ? DateTime.parse(json['paid_date']) : null,
       paymentMethod: json['payment_method'],
     );
   }
@@ -151,8 +160,10 @@ class BillSplitModel {
       'id': id,
       'bill_id': billId,
       'user_id': userId,
+      'user_name': userName,
       'amount': amount,
       'percentage': percentage,
+      'is_custom_amount': isCustomAmount,
       'is_paid': isPaid,
       'paid_date': paidDate?.toIso8601String(),
       'payment_method': paymentMethod,
@@ -163,8 +174,10 @@ class BillSplitModel {
     String? id,
     String? billId,
     String? userId,
+    String? userName,
     double? amount,
     double? percentage,
+    bool? isCustomAmount,
     bool? isPaid,
     DateTime? paidDate,
     String? paymentMethod,
@@ -173,8 +186,10 @@ class BillSplitModel {
       id: id ?? this.id,
       billId: billId ?? this.billId,
       userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
       amount: amount ?? this.amount,
       percentage: percentage ?? this.percentage,
+      isCustomAmount: isCustomAmount ?? this.isCustomAmount,
       isPaid: isPaid ?? this.isPaid,
       paidDate: paidDate ?? this.paidDate,
       paymentMethod: paymentMethod ?? this.paymentMethod,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/services/goal_service.dart';
 import '../../data/models/goal_model.dart';
+import '../../../../shared/theme/app_theme.dart';
 
 class EnhancedGoalCreatePage extends StatefulWidget {
   final Goal? goal; // null for create, Goal instance for edit
@@ -92,7 +93,7 @@ class _EnhancedGoalCreatePageState extends State<EnhancedGoalCreatePage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Colors.blueAccent,
+              primary: AppTheme.primaryColor,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black87,
@@ -328,8 +329,12 @@ class _EnhancedGoalCreatePageState extends State<EnhancedGoalCreatePage> {
           ),
         );
 
-        // Navigate back
-        context.pop();
+        // Navigate back with a slight delay to show the snackbar
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted && context.mounted) {
+            context.go('/goals'); // Navigate directly to goals page
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -369,7 +374,7 @@ class _EnhancedGoalCreatePageState extends State<EnhancedGoalCreatePage> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () => context.go('/goals'),
                       icon: Icon(
                         Icons.arrow_back,
                         color:

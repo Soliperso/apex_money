@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/models.dart';
 import '../providers/groups_provider.dart';
 import 'transfer_admin_dialog.dart';
 import '../../../../shared/theme/app_spacing.dart';
+import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 
 class GroupSettingsPanel extends StatefulWidget {
@@ -24,24 +26,24 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
     final isAdmin = widget.group.isUserAdmin(currentUserId);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Basic Settings
           _buildBasicSettingsSection(context, isAdmin),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
 
           // Member Permissions
           _buildPermissionsSection(context, isAdmin),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
 
           // Future Settings (Bill Sharing)
           _buildFutureSettingsSection(context, isAdmin),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.xl),
 
           // Danger Zone (Admin only)
           if (isAdmin) _buildDangerZone(context),
@@ -56,11 +58,12 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -70,34 +73,17 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Info tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.settings,
-                  size: 18,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Basic Settings',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Basic Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
 
           // Group Name
           _buildSettingItem(
@@ -142,11 +128,12 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -156,34 +143,17 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Info tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.security,
-                  size: 18,
-                  color: colorScheme.onSecondaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Member Permissions',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Member Permissions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
 
           // Allow Member Invites
           _buildSwitchSetting(
@@ -229,11 +199,12 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -243,31 +214,14 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Info tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.upcoming,
-                  size: 18,
-                  color: colorScheme.onTertiaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Bill Sharing Settings',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Bill Sharing Settings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
 
           const SizedBox(height: 8),
@@ -314,7 +268,7 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colorScheme.errorContainer.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -326,41 +280,24 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Info tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.warning,
-                  size: 18,
-                  color: colorScheme.onErrorContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Danger Zone',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Danger Zone',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.errorColor,
+            ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
 
           // Transfer Admin
           _buildDangerAction(
             'Transfer Admin Role',
             'Transfer admin privileges to another member',
             Icons.admin_panel_settings,
-            Colors.orange,
+            AppTheme.warningColor,
             () => _transferAdmin(context),
           ),
 
@@ -371,7 +308,7 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
             'Delete Group',
             'Permanently delete this group and all associated data',
             Icons.delete_forever,
-            Colors.red,
+            AppTheme.errorColor,
             () => _deleteGroup(context),
           ),
         ],
@@ -394,8 +331,12 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: Colors.grey[600]),
-            const SizedBox(width: 12),
+            Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +351,10 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
                   const SizedBox(height: 2),
                   Text(
                     value,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -419,20 +363,26 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
+                  color: AppTheme.infoColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
                   'Coming Soon',
                   style: TextStyle(
                     fontSize: 10,
-                    color: Colors.purple,
+                    color: AppTheme.infoColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ] else if (showEdit) ...[
-              Icon(Icons.edit, size: 16, color: Colors.grey[400]),
+              Icon(
+                Icons.edit,
+                size: 16,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
             ],
           ],
         ),
@@ -450,8 +400,12 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
-        const SizedBox(width: 12),
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +420,10 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -475,14 +432,14 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
+              color: AppTheme.infoColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(
               'Coming Soon',
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.purple,
+                color: AppTheme.infoColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -491,7 +448,7 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Colors.blueAccent,
+            activeColor: AppTheme.primaryColor,
           ),
         ],
       ],
@@ -518,7 +475,7 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
         child: Row(
           children: [
             Icon(icon, size: 20, color: color),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,7 +491,10 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -547,27 +507,131 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
   }
 
   void _editGroupName(BuildContext context) {
-    // TODO: Implement group name editing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit group name functionality coming soon'),
-      ),
+    final TextEditingController controller = TextEditingController(
+      text: widget.group.group.name,
+    );
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Edit Group Name'),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Group Name',
+                border: OutlineInputBorder(),
+              ),
+              maxLength: 50,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newName = controller.text.trim();
+                  if (newName.isNotEmpty &&
+                      newName != widget.group.group.name) {
+                    context.pop();
+                    await _updateGroupField('name', newName);
+                  } else {
+                    context.pop();
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
     );
   }
 
   void _editDescription(BuildContext context) {
-    // TODO: Implement description editing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit description functionality coming soon'),
-      ),
+    final TextEditingController controller = TextEditingController(
+      text: widget.group.group.description ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Edit Description'),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Description (Optional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              maxLength: 200,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newDescription = controller.text.trim();
+                  context.pop();
+                  await _updateGroupField(
+                    'description',
+                    newDescription.isEmpty ? null : newDescription,
+                  );
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
     );
   }
 
   void _editCurrency(BuildContext context) {
-    // TODO: Implement currency selection
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit currency functionality coming soon')),
+    final currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY'];
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Currency'),
+            content: SizedBox(
+              width: double.minPositive,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: currencies.length,
+                itemBuilder: (context, index) {
+                  final currency = currencies[index];
+                  final isSelected =
+                      currency == widget.group.group.defaultCurrency;
+
+                  return ListTile(
+                    title: Text(currency),
+                    leading: Radio<String>(
+                      value: currency,
+                      groupValue: widget.group.group.defaultCurrency,
+                      onChanged: (value) {
+                        context.pop();
+                        if (value != null) {
+                          _updateGroupField('defaultCurrency', value);
+                        }
+                      },
+                    ),
+                    onTap: () {
+                      context.pop();
+                      _updateGroupField('defaultCurrency', currency);
+                    },
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -593,7 +657,7 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update setting: ${provider.error}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.errorColor,
         ),
       );
     }
@@ -634,12 +698,12 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
 
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.deleteGroup(
@@ -652,14 +716,14 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
                         content: Text('Group deleted successfully'),
                       ),
                     );
-                    Navigator.of(context).pop(); // Go back to groups list
+                    context.pop(); // Go back to groups list
                   } else if (mounted && provider.hasError) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
                           'Failed to delete group: ${provider.error}',
                         ),
-                        backgroundColor: Colors.red,
+                        backgroundColor: AppTheme.errorColor,
                       ),
                     );
                   }
@@ -672,5 +736,60 @@ class _GroupSettingsPanelState extends State<GroupSettingsPanel> {
             ],
           ),
     );
+  }
+
+  Future<void> _updateGroupField(String field, dynamic value) async {
+    final provider = context.read<GroupsProvider>();
+
+    try {
+      Map<String, dynamic> updateData = {};
+      switch (field) {
+        case 'name':
+          updateData['name'] = value;
+          break;
+        case 'description':
+          updateData['description'] = value;
+          break;
+        case 'defaultCurrency':
+          updateData['defaultCurrency'] = value;
+          break;
+      }
+
+      await provider.updateGroup(
+        groupId: widget.group.group.id!,
+        name: updateData['name'],
+        description: updateData['description'],
+        defaultCurrency: updateData['defaultCurrency'],
+      );
+
+      if (provider.hasError) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update: ${provider.error}'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Group updated successfully'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating group: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
   }
 }

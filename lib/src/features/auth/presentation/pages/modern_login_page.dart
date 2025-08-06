@@ -58,6 +58,13 @@ class _ModernLoginPageState extends State<ModernLoginPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Force dismiss keyboard if it's stuck from previous screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    });
+
     _initializeAnimations();
     _initializeAuth();
   }

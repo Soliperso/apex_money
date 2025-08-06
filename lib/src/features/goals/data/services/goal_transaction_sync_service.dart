@@ -262,46 +262,6 @@ class GoalTransactionSyncService {
     return total;
   }
 
-  /// Debug method to test goal-transaction matching
-  Future<void> debugGoalTransactionMatching(Transaction transaction) async {
-    print('🔍 DEBUG: Testing goal-transaction matching for transaction:');
-    print('   Description: ${transaction.description}');
-    print('   Amount: ${transaction.amount}');
-    print('   Type: ${transaction.type}');
-    print('   Category: ${transaction.category}');
-
-    try {
-      final goals = await _goalService.fetchGoals();
-      print('🔍 DEBUG: Found ${goals.length} total goals');
-
-      for (final goal in goals) {
-        print('🔍 DEBUG: Checking goal: ${goal.name}');
-        print('   Goal type: ${goal.type.name}');
-        print('   Linked categories: ${goal.linkedCategories}');
-        print('   Auto-update: ${goal.autoUpdate}');
-
-        // Check if this goal matches the transaction
-        final isRelevant =
-            goal.linkedCategories.isEmpty ||
-            goal.linkedCategories.contains(transaction.category);
-        print('   Is relevant: $isRelevant');
-
-        if (isRelevant) {
-          final contribution = _calculateTransactionContribution(
-            goal,
-            transaction,
-          );
-          print('   Transaction contribution: $contribution');
-          print('   Current goal amount: ${goal.currentAmount}');
-          print('   Target goal amount: ${goal.targetAmount}');
-        }
-        print('');
-      }
-    } catch (e) {
-      print('🔍 DEBUG: Error during goal matching: $e');
-    }
-  }
-
   /// Comprehensive debug method to understand sync issues
   Future<Map<String, dynamic>> getComprehensiveDebugInfo() async {
     final debugInfo = <String, dynamic>{};

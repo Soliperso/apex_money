@@ -577,16 +577,20 @@ class _TransactionListPageState extends State<TransactionListPage> {
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isSelectionMode && isSelected
-            ? theme.colorScheme.primary.withValues(alpha: 0.1)
-            : theme.brightness == Brightness.dark
+        color:
+            _isSelectionMode && isSelected
+                ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                : theme.brightness == Brightness.dark
                 ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.4,
+                ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: _isSelectionMode && isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
+          color:
+              _isSelectionMode && isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: _isSelectionMode && isSelected ? 2 : 1,
         ),
       ),
@@ -759,7 +763,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.delete, color: Colors.red),
+                leading: Icon(Icons.delete, color: AppTheme.errorColor),
                 title: const Text('Delete Transaction'),
                 onTap: () {
                   Navigator.pop(context);
@@ -1228,17 +1232,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   onPressed: _toggleSelectionMode,
                   tooltip: 'Select Multiple',
                 ),
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  color: iconColor,
-                  onPressed: () {}, // TODO: Implement search
-                  tooltip: 'Search Transactions',
-                ),
                 AppSettingsMenu(iconColor: iconColor),
               ],
     );
   }
-
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
@@ -1247,9 +1244,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: theme.brightness == Brightness.dark 
-              ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-              : theme.colorScheme.surface.withValues(alpha: 0.5),
+          color:
+              theme.brightness == Brightness.dark
+                  ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                  : theme.colorScheme.surface.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -1318,9 +1316,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : theme.colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            theme.brightness == Brightness.dark
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -1413,12 +1412,19 @@ class _TransactionListPageState extends State<TransactionListPage> {
           margin: const EdgeInsets.all(24),
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1448,7 +1454,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
               ),
               const SizedBox(height: AppSpacing.lg),
               ElevatedButton(
-                onPressed: () => context.go('/create-transaction'),
+                onPressed: () => context.push('/create-transaction'),
                 child: const Text('Add Transaction'),
               ),
             ],
@@ -1987,4 +1993,3 @@ class _EnhancedFilterBottomSheetState
     }
   }
 }
-

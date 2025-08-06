@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:apex_money/src/shared/services/login_attempt_service.dart';
-import 'package:apex_money/src/features/groups/data/services/group_service.dart';
+import 'package:apex_money/src/shared/config/api_config.dart';
 
 class AuthService {
-  final String baseUrl = 'https://srv797850.hstgr.cloud/api';
+  String get baseUrl => ApiConfig.apiBaseUrl;
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     // Check if user is locked out
@@ -27,8 +28,9 @@ class AuthService {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}'); // Debugging log
+      if (kDebugMode) {
+        print('Login response status: ${response.statusCode}');
+      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -43,9 +45,26 @@ class AuthService {
 
           await prefs.setString('access_token', accessToken);
 
+          // Store user email as user ID (since user model has no 'id' field)
+          final userId =
+              data['user']?['email']?.toString() ?? // Primary: user.email
+              data['email']?.toString(); // Fallback: direct email
+          if (userId != null) {
+            await prefs.setString('user_id', userId);
+            if (kDebugMode) {
+              print('Stored user_id: $userId');
+            }
+          } else {
+            if (kDebugMode) {
+              print('No user ID found in login response: $data');
+            }
+          }
+
           // Clear user-specific data if a different user is logging in
           if (isDifferentUser) {
-            print('Debug: Different user detected, clearing cached data');
+            if (kDebugMode) {
+              print('Different user detected, clearing cached data');
+            }
             await clearUserData();
           }
 
@@ -86,8 +105,9 @@ class AuthService {
       body: jsonEncode({'name': name, 'email': email, 'password': password}),
     );
 
-    print('Registration response status: ${response.statusCode}');
-    print('Registration response body: ${response.body}'); // Debugging log
+    if (kDebugMode) {
+      print('Registration response status: ${response.statusCode}');
+    }
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       // Clear any previous user's data and login preferences after successful registration
@@ -113,13 +133,16 @@ class AuthService {
     await prefs.remove('email');
     await prefs.remove('keepSignedIn');
     // Add any other user-specific keys here
-    print('Debug: Cleared user-specific cached data and login preferences');
+    if (kDebugMode) {
+      print('Cleared user-specific cached data and login preferences');
+    }
   }
 
   Future<void> logout() async {
     await clearUserData(); // Clear user-specific data first
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
+    await prefs.remove('user_id');
     // Clear remember me preferences on explicit logout
     await prefs.setBool('keepSignedIn', false);
     await prefs.remove('email');
@@ -164,6 +187,34 @@ class AuthService {
     } else {
       throw Exception('Failed to fetch user profile: ${response.body}');
     }
+  }
+
+  /// Get current user information from local storage
+  Future<Map<String, dynamic>?> getCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('user_id'); // This is the user's email
+
+    if (userId == null) {
+      return null;
+    }
+
+    try {
+      // Try to get full profile from the server
+      final profile = await fetchUserProfile();
+      return profile;
+    } catch (e) {
+      // Fallback to minimal local data if server request fails
+      return {
+        'email': userId,
+        'name': 'User', // Default name - could be enhanced to store locally
+      };
+    }
+  }
+
+  /// Get current user email (which serves as user ID)
+  Future<String?> getCurrentUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
   }
 
   Future<Map<String, dynamic>> sendPasswordResetEmail(String email) async {

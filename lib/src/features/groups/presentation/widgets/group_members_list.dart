@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/models.dart';
 import '../providers/groups_provider.dart';
 import 'invite_member_dialog.dart';
@@ -130,7 +131,10 @@ class GroupMembersList extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 2,
+              ),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -171,9 +175,10 @@ class GroupMembersList extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.2),
@@ -230,7 +235,9 @@ class GroupMembersList extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
                             ),
                             child: Text(
                               'You',
@@ -443,6 +450,21 @@ class GroupMembersList extends StatelessWidget {
       case 'promote':
         _showPromoteConfirmation(context, member);
         break;
+      case 'demote':
+        await _updateMemberRole(context, member, GroupMemberRole.member);
+        break;
+      case 'transfer_admin':
+        _showTransferAdminConfirmation(context, member);
+        break;
+      case 'view_details':
+        _showMemberDetails(context, member);
+        break;
+      case 'suspend':
+        await _updateMemberStatus(context, member, GroupMemberStatus.removed);
+        break;
+      case 'reactivate':
+        await _updateMemberStatus(context, member, GroupMemberStatus.active);
+        break;
       case 'remove':
         _showRemoveConfirmation(context, member);
         break;
@@ -460,12 +482,12 @@ class GroupMembersList extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
 
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.transferAdminRole(
@@ -509,12 +531,12 @@ class GroupMembersList extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
 
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.removeMember(
@@ -543,6 +565,197 @@ class GroupMembersList extends StatelessWidget {
                   backgroundColor: Theme.of(context).colorScheme.error,
                 ),
                 child: const Text('Remove'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // ============================================================================
+  // ENHANCED MEMBER CRUD OPERATIONS
+  // ============================================================================
+
+  /// Update member role with backend integration
+  Future<void> _updateMemberRole(
+    BuildContext context,
+    GroupMemberModel member,
+    GroupMemberRole newRole,
+  ) async {
+    final provider = context.read<GroupsProvider>();
+
+    final success = await provider.updateMemberRole(
+      groupId: group.group.id!,
+      userId: member.userId,
+      newRole: newRole,
+    );
+
+    if (success && context.mounted) {
+      final roleText = newRole == GroupMemberRole.admin ? 'admin' : 'member';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${member.userName} is now an $roleText'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    } else if (context.mounted && provider.hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update role: ${provider.error}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  /// Update member status with backend integration
+  Future<void> _updateMemberStatus(
+    BuildContext context,
+    GroupMemberModel member,
+    GroupMemberStatus newStatus,
+  ) async {
+    final provider = context.read<GroupsProvider>();
+
+    final success = await provider.updateMemberStatus(
+      groupId: group.group.id!,
+      userId: member.userId,
+      newStatus: newStatus,
+    );
+
+    if (success && context.mounted) {
+      final statusText =
+          newStatus == GroupMemberStatus.active ? 'reactivated' : 'suspended';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${member.userName} has been $statusText'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    } else if (context.mounted && provider.hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update status: ${provider.error}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  /// Show member details dialog
+  void _showMemberDetails(BuildContext context, GroupMemberModel member) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Member Details'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailRow('Name', member.userName ?? 'Unknown'),
+                _buildDetailRow('Email', member.userEmail ?? 'No email'),
+                _buildDetailRow(
+                  'Role',
+                  member.role == GroupMemberRole.admin ? 'Admin' : 'Member',
+                ),
+                _buildDetailRow('Status', _getStatusText(member.status)),
+                if (member.status == GroupMemberStatus.active)
+                  _buildDetailRow('Joined', _formatJoinDate(member.joinedAt)),
+                if (member.invitedAt != null)
+                  _buildDetailRow(
+                    'Invited',
+                    _formatJoinDate(member.invitedAt!),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => context.pop(), child: Text('Close')),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  String _getStatusText(GroupMemberStatus status) {
+    switch (status) {
+      case GroupMemberStatus.active:
+        return 'Active';
+      case GroupMemberStatus.invited:
+        return 'Pending Invitation';
+      case GroupMemberStatus.left:
+        return 'Left Group';
+      case GroupMemberStatus.removed:
+        return 'Removed/Suspended';
+    }
+  }
+
+  /// Show transfer admin confirmation dialog
+  void _showTransferAdminConfirmation(
+    BuildContext context,
+    GroupMemberModel member,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Transfer Admin Role'),
+            content: Text(
+              'Are you sure you want to transfer admin privileges to ${member.userName}? '
+              'You will lose admin privileges and become a regular member.',
+            ),
+            actions: [
+              TextButton(onPressed: () => context.pop(), child: Text('Cancel')),
+              FilledButton(
+                onPressed: () async {
+                  context.pop();
+
+                  final provider = context.read<GroupsProvider>();
+                  final success = await provider.transferAdminRole(
+                    groupId: group.group.id!,
+                    newAdminUserId: member.userId,
+                  );
+
+                  if (success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Admin role transferred to ${member.userName}',
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    );
+                  } else if (context.mounted && provider.hasError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Failed to transfer admin role: ${provider.error}',
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  }
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                ),
+                child: Text('Transfer'),
               ),
             ],
           ),

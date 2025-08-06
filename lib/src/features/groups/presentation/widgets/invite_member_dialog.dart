@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/models.dart';
 import '../providers/groups_provider.dart';
 
@@ -159,10 +160,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: () => context.pop(), child: const Text('Cancel')),
         Consumer<GroupsProvider>(
           builder: (context, provider, child) {
             return FilledButton(
@@ -203,7 +201,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
     );
 
     if (invitation != null && mounted) {
-      Navigator.of(context).pop();
+      context.pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Invitation sent to ${_emailController.text.trim()}'),

@@ -2,8 +2,12 @@ class DebtModel {
   final String? id;
   final String groupId;
   final String debtorUserId; // Person who owes money
+  final String? debtorName; // Added to match DB model
   final String creditorUserId; // Person who is owed money
-  final double amount;
+  final String? creditorName; // Added to match DB model
+  final double originalAmount; // Renamed to match DB model
+  final double paidAmount; // Added to match DB model
+  final double remainingAmount; // Added to match DB model
   final String currency;
   final String status; // 'active', 'settled', 'partial'
   final List<String> billIds; // Bills that contribute to this debt
@@ -15,8 +19,12 @@ class DebtModel {
     this.id,
     required this.groupId,
     required this.debtorUserId,
+    this.debtorName,
     required this.creditorUserId,
-    required this.amount,
+    this.creditorName,
+    required this.originalAmount,
+    required this.paidAmount,
+    required this.remainingAmount,
     required this.currency,
     required this.status,
     required this.billIds,
@@ -30,24 +38,39 @@ class DebtModel {
       id: json['id']?.toString(),
       groupId: json['group_id']?.toString() ?? '',
       debtorUserId: json['debtor_user_id']?.toString() ?? '',
+      debtorName: json['debtor_name']?.toString(),
       creditorUserId: json['creditor_user_id']?.toString() ?? '',
-      amount: (json['amount'] is int)
-          ? (json['amount'] as int).toDouble()
-          : (json['amount'] as double? ?? 0.0),
+      creditorName: json['creditor_name']?.toString(),
+      originalAmount:
+          (json['original_amount'] is int)
+              ? (json['original_amount'] as int).toDouble()
+              : (json['original_amount'] as double? ?? 0.0),
+      paidAmount:
+          (json['paid_amount'] is int)
+              ? (json['paid_amount'] as int).toDouble()
+              : (json['paid_amount'] as double? ?? 0.0),
+      remainingAmount:
+          (json['remaining_amount'] is int)
+              ? (json['remaining_amount'] as int).toDouble()
+              : (json['remaining_amount'] as double? ?? 0.0),
       currency: json['currency'] ?? 'USD',
       status: json['status'] ?? 'active',
-      billIds: (json['bill_ids'] as List<dynamic>? ?? [])
-          .map((id) => id.toString())
-          .toList(),
-      createdDate: json['created_date'] != null
-          ? DateTime.parse(json['created_date'])
-          : DateTime.now(),
-      settledDate: json['settled_date'] != null
-          ? DateTime.parse(json['settled_date'])
-          : null,
-      payments: (json['payments'] as List<dynamic>? ?? [])
-          .map((payment) => PaymentModel.fromJson(payment))
-          .toList(),
+      billIds:
+          (json['bill_ids'] as List<dynamic>? ?? [])
+              .map((id) => id.toString())
+              .toList(),
+      createdDate:
+          json['created_date'] != null
+              ? DateTime.parse(json['created_date'])
+              : DateTime.now(),
+      settledDate:
+          json['settled_date'] != null
+              ? DateTime.parse(json['settled_date'])
+              : null,
+      payments:
+          (json['payments'] as List<dynamic>? ?? [])
+              .map((payment) => PaymentModel.fromJson(payment))
+              .toList(),
     );
   }
 
@@ -56,8 +79,12 @@ class DebtModel {
       'id': id,
       'group_id': groupId,
       'debtor_user_id': debtorUserId,
+      'debtor_name': debtorName,
       'creditor_user_id': creditorUserId,
-      'amount': amount,
+      'creditor_name': creditorName,
+      'original_amount': originalAmount,
+      'paid_amount': paidAmount,
+      'remaining_amount': remainingAmount,
       'currency': currency,
       'status': status,
       'bill_ids': billIds,
@@ -67,22 +94,19 @@ class DebtModel {
     };
   }
 
-  double get remainingAmount {
-    final totalPaid = payments.fold<double>(
-      0.0,
-      (sum, payment) => sum + payment.amount,
-    );
-    return amount - totalPaid;
-  }
-
-  bool get isFullySettled => remainingAmount <= 0.01; // Account for floating point precision
+  bool get isFullySettled =>
+      remainingAmount <= 0.01; // Account for floating point precision
 
   DebtModel copyWith({
     String? id,
     String? groupId,
     String? debtorUserId,
+    String? debtorName,
     String? creditorUserId,
-    double? amount,
+    String? creditorName,
+    double? originalAmount,
+    double? paidAmount,
+    double? remainingAmount,
     String? currency,
     String? status,
     List<String>? billIds,
@@ -94,8 +118,12 @@ class DebtModel {
       id: id ?? this.id,
       groupId: groupId ?? this.groupId,
       debtorUserId: debtorUserId ?? this.debtorUserId,
+      debtorName: debtorName ?? this.debtorName,
       creditorUserId: creditorUserId ?? this.creditorUserId,
-      amount: amount ?? this.amount,
+      creditorName: creditorName ?? this.creditorName,
+      originalAmount: originalAmount ?? this.originalAmount,
+      paidAmount: paidAmount ?? this.paidAmount,
+      remainingAmount: remainingAmount ?? this.remainingAmount,
       currency: currency ?? this.currency,
       status: status ?? this.status,
       billIds: billIds ?? this.billIds,
@@ -137,13 +165,15 @@ class PaymentModel {
       debtId: json['debt_id']?.toString() ?? '',
       payerUserId: json['payer_user_id']?.toString() ?? '',
       receiverUserId: json['receiver_user_id']?.toString() ?? '',
-      amount: (json['amount'] is int)
-          ? (json['amount'] as int).toDouble()
-          : (json['amount'] as double? ?? 0.0),
+      amount:
+          (json['amount'] is int)
+              ? (json['amount'] as int).toDouble()
+              : (json['amount'] as double? ?? 0.0),
       currency: json['currency'] ?? 'USD',
-      paymentDate: json['payment_date'] != null
-          ? DateTime.parse(json['payment_date'])
-          : DateTime.now(),
+      paymentDate:
+          json['payment_date'] != null
+              ? DateTime.parse(json['payment_date'])
+              : DateTime.now(),
       paymentMethod: json['payment_method'] ?? 'cash',
       notes: json['notes'],
       isConfirmed: json['is_confirmed'] ?? false,

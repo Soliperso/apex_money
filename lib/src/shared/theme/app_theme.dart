@@ -1,67 +1,125 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Export design system utilities
+export 'design_system.dart';
+export '../widgets/financial_amount_widget.dart';
+
 class AppTheme {
-  static const Color primaryColor = Color(0xFF2196F3);
-  static const Color primaryVariant = Color(0xFF1976D2);
-  static const Color secondaryColor = Color(0xFF03DAC6);
-  static const Color secondaryVariant = Color(0xFF018786);
-  
-  // Success/Error colors
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color warningColor = Color(0xFFFF9800);
-  static const Color errorColor = Color(0xFFF44336);
-  static const Color infoColor = Color(0xFF2196F3);
-  
+  // Enhanced financial color palette
+  static const Color primaryColor = Color(0xFF1976D2); // Trust-building blue
+  static const Color primaryVariant = Color(0xFF0D47A1);
+  static const Color secondaryColor = Color(0xFF0097A7); // Financial teal
+  static const Color secondaryVariant = Color(0xFF006064);
+
+  // Financial semantic colors with better contrast
+  static const Color successColor = Color(
+    0xFF2E7D32,
+  ); // Income/positive (darker green for better contrast)
+  static const Color warningColor = Color(0xFFED6C02); // Alert/caution (amber)
+  static const Color errorColor = Color(
+    0xFFD32F2F,
+  ); // Expense/negative (darker red)
+  static const Color infoColor = Color(0xFF0288D1); // Information (blue)
+
+  // Additional financial colors
+  static const Color neutralColor = Color(0xFF6B7280); // Neutral transactions
+  static const Color savingsColor = Color(0xFF7C3AED); // Savings/goals (purple)
+  static const Color investmentColor = Color(
+    0xFF059669,
+  ); // Investment (emerald)
+
+  // Premium gradients for financial trust
+  static const List<Color> premiumGradient = [
+    Color(0xFF1976D2),
+    Color(0xFF1565C0),
+    Color(0xFF0D47A1),
+  ];
+
+  static const List<Color> incomeGradient = [
+    Color(0xFF2E7D32),
+    Color(0xFF388E3C),
+    Color(0xFF4CAF50),
+  ];
+
+  static const List<Color> expenseGradient = [
+    Color(0xFFD32F2F),
+    Color(0xFFE53935),
+    Color(0xFFEF5350),
+  ];
+
   // Gradient colors
   static const List<Color> primaryGradient = [
     Color(0xFF1976D2),
     Color(0xFF2196F3),
     Color(0xFF64B5F6),
   ];
-  
+
   static const List<Color> surfaceGradient = [
     Color(0xFFF8F9FA),
     Color(0xFFFFFFFF),
   ];
-  
+
   static const List<Color> darkSurfaceGradient = [
     Color(0xFF1E1E1E),
     Color(0xFF2D2D2D),
   ];
 
-  // Light Theme
+  // Light Theme - Optimized for financial trust and accessibility
   static ThemeData get lightTheme {
     final ColorScheme colorScheme = ColorScheme.fromSeed(
       seedColor: primaryColor,
       brightness: Brightness.light,
     ).copyWith(
+      // Enhanced primary colors for financial trust
       primary: primaryColor,
-      primaryContainer: const Color(0xFFE3F2FD),
+      primaryContainer: const Color(0xFFE1F5FE), // Light blue container
+      onPrimaryContainer: const Color(0xFF01579B),
+
+      // Financial-friendly secondary colors
       secondary: secondaryColor,
-      secondaryContainer: const Color(0xFFE0F2F1),
-      surface: Colors.white,
-      surfaceContainerHighest: const Color(0xFFF8F9FA),
-      surfaceContainerHigh: const Color(0xFFF1F3F4),
-      surfaceContainer: const Color(0xFFF8F9FA),
+      secondaryContainer: const Color(0xFFB2EBF2), // Light teal
+      onSecondaryContainer: const Color(0xFF004D5B),
+
+      // Enhanced surface colors for premium feel
+      surface: const Color(0xFFFFFBFE), // Warm white for financial comfort
+      surfaceContainerHighest: const Color(0xFFF7F2FA),
+      surfaceContainerHigh: const Color(0xFFF3EDF7),
+      surfaceContainer: const Color(0xFFF0EBF4),
+      surfaceContainerLow: const Color(0xFFFBF8FD),
+      surfaceContainerLowest: Colors.white,
+
+      // Improved text colors for financial data readability
       onPrimary: Colors.white,
-      onSecondary: Colors.black87,
-      onSurface: Colors.black87,
+      onSecondary: Colors.white,
+      onSurface: const Color(0xFF1D1B20), // High contrast for financial data
       onSurfaceVariant: const Color(0xFF49454F),
+
+      // Enhanced outline colors for better visual hierarchy
       outline: const Color(0xFF79747E),
       outlineVariant: const Color(0xFFCAC4D0),
-      shadow: Colors.black.withValues(alpha: 0.1),
-      scrim: Colors.black54,
-      inverseSurface: const Color(0xFF313033),
+
+      // Financial semantic additions
+      error: errorColor,
+      onError: Colors.white,
+      errorContainer: const Color(0xFFFFDAD6),
+      onErrorContainer: const Color(0xFF410002),
+
+      // Shadow and scrim for depth perception
+      shadow: Colors.black.withValues(alpha: 0.08),
+      scrim: Colors.black.withValues(alpha: 0.6),
+
+      // Inverse colors for dark elements
+      inverseSurface: const Color(0xFF1D1B20),
       onInverseSurface: const Color(0xFFF4EFF4),
-      inversePrimary: const Color(0xFFB0C4FF),
+      inversePrimary: const Color(0xFFB3E5FC),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.light,
-      
+
       // Typography
       textTheme: GoogleFonts.interTextTheme().copyWith(
         displayLarge: GoogleFonts.inter(
@@ -140,7 +198,7 @@ class AppTheme {
           color: colorScheme.onSurface,
         ),
       ),
-      
+
       // AppBar Theme
       appBarTheme: AppBarTheme(
         elevation: 0,
@@ -156,21 +214,18 @@ class AppTheme {
         iconTheme: IconThemeData(color: colorScheme.onSurface),
         actionsIconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
-      
+
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 1,
-          ),
+          side: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
         color: colorScheme.surface,
         surfaceTintColor: colorScheme.surfaceTint,
       ),
-      
+
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -188,7 +243,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Outlined Button Theme
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -204,7 +259,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -219,7 +274,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // FloatingActionButton Theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: colorScheme.primary,
@@ -230,7 +285,7 @@ class AppTheme {
         highlightElevation: 12,
         shape: const CircleBorder(),
       ),
-      
+
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -258,7 +313,9 @@ class AppTheme {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.5)),
+          borderSide: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.5),
+          ),
         ),
         labelStyle: GoogleFonts.inter(
           fontSize: 14,
@@ -270,7 +327,7 @@ class AppTheme {
           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
-      
+
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
@@ -287,7 +344,7 @@ class AppTheme {
           fontWeight: FontWeight.w500,
         ),
       ),
-      
+
       // Snackbar Theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colorScheme.inverseSurface,
@@ -295,19 +352,15 @@ class AppTheme {
           color: colorScheme.onInverseSurface,
           fontSize: 14,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
-      
+
       // Dialog Theme
       dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
         elevation: 24,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 24,
           fontWeight: FontWeight.w600,
@@ -318,19 +371,17 @@ class AppTheme {
           color: colorScheme.onSurface,
         ),
       ),
-      
+
       // Divider Theme
       dividerTheme: DividerThemeData(
         color: colorScheme.outlineVariant,
         thickness: 1,
         space: 1,
       ),
-      
+
       // List Tile Theme
       listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 16,
@@ -345,30 +396,53 @@ class AppTheme {
     );
   }
 
-  // Dark Theme
+  // Dark Theme - Premium financial dark mode
   static ThemeData get darkTheme {
     final ColorScheme colorScheme = ColorScheme.fromSeed(
       seedColor: primaryColor,
       brightness: Brightness.dark,
     ).copyWith(
-      primary: const Color(0xFF64B5F6),
+      // Premium financial dark colors
+      primary: const Color(0xFF90CAF9), // Lighter blue for dark backgrounds
       primaryContainer: const Color(0xFF0D47A1),
+      onPrimary: const Color(0xFF1D1B20),
+      onPrimaryContainer: const Color(0xFFE1F5FE),
+
+      // Financial-friendly secondary dark colors
       secondary: const Color(0xFF4DD0E1),
-      secondaryContainer: const Color(0xFF006064),
-      surface: const Color(0xFF121212),
-      surfaceContainerHighest: const Color(0xFF2D2D2D),
-      surfaceContainerHigh: const Color(0xFF242424),
-      surfaceContainer: const Color(0xFF1E1E1E),
-      onPrimary: Colors.black87,
-      onSecondary: Colors.black87,
-      onSurface: Colors.white,
+      secondaryContainer: const Color(0xFF00363A),
+      onSecondary: const Color(0xFF1D1B20),
+      onSecondaryContainer: const Color(0xFFB2EBF2),
+
+      // Enhanced dark surfaces for financial comfort
+      surface: const Color(0xFF141218), // Warm dark for financial apps
+      surfaceContainerHighest: const Color(0xFF2B2930),
+      surfaceContainerHigh: const Color(0xFF24232A),
+      surfaceContainer: const Color(0xFF1F1E25),
+      surfaceContainerLow: const Color(0xFF1D1B20),
+      surfaceContainerLowest: const Color(0xFF0F0D13),
+
+      // High contrast text for financial data readability
+      onSurface: const Color(0xFFE6E0E9),
       onSurfaceVariant: const Color(0xFFCAC4CF),
-      outline: const Color(0xFF938F94),
+
+      // Enhanced outlines for dark mode hierarchy
+      outline: const Color(0xFF948F99),
       outlineVariant: const Color(0xFF49454E),
-      shadow: Colors.black.withValues(alpha: 0.3),
-      scrim: Colors.black87,
-      inverseSurface: const Color(0xFFE6E1E5),
-      onInverseSurface: const Color(0xFF313033),
+
+      // Financial semantic dark colors
+      error: const Color(0xFFFFB4AB),
+      onError: const Color(0xFF690005),
+      errorContainer: const Color(0xFF93000A),
+      onErrorContainer: const Color(0xFFFFDAD6),
+
+      // Enhanced shadow and scrim for depth
+      shadow: Colors.black.withValues(alpha: 0.4),
+      scrim: Colors.black.withValues(alpha: 0.8),
+
+      // Inverse colors for light elements
+      inverseSurface: const Color(0xFFE6E0E9),
+      onInverseSurface: const Color(0xFF1D1B20),
       inversePrimary: primaryColor,
     );
 
@@ -376,9 +450,11 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.dark,
-      
+
       // Typography (same as light theme but with dark colors)
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+      textTheme: GoogleFonts.interTextTheme(
+        ThemeData.dark().textTheme,
+      ).copyWith(
         displayLarge: GoogleFonts.inter(
           fontSize: 57,
           fontWeight: FontWeight.w400,
@@ -455,7 +531,7 @@ class AppTheme {
           color: colorScheme.onSurface,
         ),
       ),
-      
+
       // AppBar Theme
       appBarTheme: AppBarTheme(
         elevation: 0,
@@ -471,21 +547,18 @@ class AppTheme {
         iconTheme: IconThemeData(color: colorScheme.onSurface),
         actionsIconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
-      
+
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 1,
-          ),
+          side: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
         color: colorScheme.surfaceContainer,
         surfaceTintColor: colorScheme.surfaceTint,
       ),
-      
+
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -503,7 +576,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Outlined Button Theme
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -519,7 +592,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -534,7 +607,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // FloatingActionButton Theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: colorScheme.primary,
@@ -545,7 +618,7 @@ class AppTheme {
         highlightElevation: 12,
         shape: const CircleBorder(),
       ),
-      
+
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -573,7 +646,9 @@ class AppTheme {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colorScheme.outline.withValues(alpha: 0.5)),
+          borderSide: BorderSide(
+            color: colorScheme.outline.withValues(alpha: 0.5),
+          ),
         ),
         labelStyle: GoogleFonts.inter(
           fontSize: 14,
@@ -585,7 +660,7 @@ class AppTheme {
           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
-      
+
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
@@ -602,7 +677,7 @@ class AppTheme {
           fontWeight: FontWeight.w500,
         ),
       ),
-      
+
       // Snackbar Theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colorScheme.inverseSurface,
@@ -610,19 +685,15 @@ class AppTheme {
           color: colorScheme.onInverseSurface,
           fontSize: 14,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
-      
+
       // Dialog Theme
       dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
         elevation: 24,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 24,
           fontWeight: FontWeight.w600,
@@ -633,19 +704,17 @@ class AppTheme {
           color: colorScheme.onSurface,
         ),
       ),
-      
+
       // Divider Theme
       dividerTheme: DividerThemeData(
         color: colorScheme.outlineVariant,
         thickness: 1,
         space: 1,
       ),
-      
+
       // List Tile Theme
       listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 16,
@@ -661,33 +730,91 @@ class AppTheme {
   }
 }
 
-// Extension to add custom semantic colors
+// Enhanced financial semantic colors extension
 extension AppColors on ColorScheme {
-  Color get success => const Color(0xFF4CAF50);
-  Color get warning => const Color(0xFFFF9800);
+  // Financial semantic colors with improved accessibility
+  Color get incomeColor =>
+      brightness == Brightness.light
+          ? AppTheme.successColor
+          : const Color(0xFF81C784);
+
+  Color get expenseColor =>
+      brightness == Brightness.light
+          ? AppTheme.errorColor
+          : const Color(0xFFEF5350);
+
+  Color get neutralColor =>
+      brightness == Brightness.light
+          ? AppTheme.neutralColor
+          : const Color(0xFF9E9E9E);
+
+  Color get savingsColor =>
+      brightness == Brightness.light
+          ? AppTheme.savingsColor
+          : const Color(0xFFB39DDB);
+
+  Color get investmentColor =>
+      brightness == Brightness.light
+          ? AppTheme.investmentColor
+          : const Color(0xFF4DB6AC);
+
+  // Legacy support
+  Color get success => incomeColor;
+  Color get warning => AppTheme.warningColor;
   Color get info => AppTheme.infoColor;
-  
-  Color get successContainer => brightness == Brightness.light 
-    ? const Color(0xFFE8F5E8) 
-    : const Color(0xFF1B5E20);
-    
-  Color get warningContainer => brightness == Brightness.light 
-    ? const Color(0xFFFFF3E0) 
-    : const Color(0xFFE65100);
-    
-  Color get infoContainer => brightness == Brightness.light 
-    ? const Color(0xFFE3F2FD) 
-    : const Color(0xFF0D47A1);
-    
-  Color get onSuccess => brightness == Brightness.light 
-    ? Colors.white 
-    : Colors.black87;
-    
-  Color get onWarning => brightness == Brightness.light 
-    ? Colors.white 
-    : Colors.black87;
-    
-  Color get onInfo => brightness == Brightness.light 
-    ? Colors.white 
-    : Colors.black87;
+
+  // Enhanced container colors for financial states
+  Color get incomeContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFE8F5E8)
+          : const Color(0xFF1B5E20);
+
+  Color get expenseContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFFFEBEE)
+          : const Color(0xFFB71C1C);
+
+  Color get neutralContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFF5F5F5)
+          : const Color(0xFF424242);
+
+  Color get savingsContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFF3E5F5)
+          : const Color(0xFF4A148C);
+
+  Color get investmentContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFE0F2F1)
+          : const Color(0xFF004D40);
+
+  Color get warningContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFFFF3E0)
+          : const Color(0xFFE65100);
+
+  Color get infoContainer =>
+      brightness == Brightness.light
+          ? const Color(0xFFE3F2FD)
+          : const Color(0xFF0D47A1);
+
+  // On-color variants for proper contrast
+  Color get onIncome =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
+  Color get onExpense =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
+  Color get onNeutral =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
+  Color get onSavings =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
+  Color get onInvestment =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
+
+  // Legacy support
+  Color get onSuccess => onIncome;
+  Color get onWarning =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
+  Color get onInfo =>
+      brightness == Brightness.light ? Colors.white : Colors.black87;
 }

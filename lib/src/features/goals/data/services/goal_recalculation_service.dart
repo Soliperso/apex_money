@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../models/goal_model.dart';
 import 'goal_service.dart';
-import 'goal_transaction_sync_service.dart';
 import '../../../transactions/data/services/transaction_service.dart';
 
 /// Service to manage goal recalculation and synchronization
@@ -12,12 +12,13 @@ class GoalRecalculationService {
   GoalRecalculationService._internal();
 
   final GoalService _goalService = GoalService();
-  final GoalTransactionSyncService _syncService = GoalTransactionSyncService();
   final TransactionService _transactionService = TransactionService();
 
   /// Recalculate all auto-update goals from scratch based on all transactions
   Future<void> recalculateAllGoals() async {
-    print('Starting goal recalculation...');
+    if (kDebugMode) {
+      debugPrint('GoalRecalculationService: Starting goal recalculation...');
+    }
 
     try {
       // Fetch all goals and transactions
@@ -32,16 +33,28 @@ class GoalRecalculationService {
       // Filter goals that have auto-update enabled
       final autoUpdateGoals = goals.where((goal) => goal.autoUpdate).toList();
 
-      print('Found ${autoUpdateGoals.length} auto-update goals to recalculate');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Found ${autoUpdateGoals.length} auto-update goals to recalculate',
+        );
+      }
 
       // Recalculate each goal
       for (final goal in autoUpdateGoals) {
         await _recalculateGoal(goal, allTransactions);
       }
 
-      print('Goal recalculation completed successfully');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Goal recalculation completed successfully',
+        );
+      }
     } catch (e) {
-      print('Error during goal recalculation: $e');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Error during goal recalculation: $e',
+        );
+      }
       rethrow;
     }
   }
@@ -56,23 +69,31 @@ class GoalRecalculationService {
       );
 
       if (!goal.autoUpdate) {
-        print(
-          'Goal ${goal.name} has auto-update disabled, skipping recalculation',
-        );
+        if (kDebugMode) {
+          debugPrint(
+            'GoalRecalculationService: Goal ${goal.name} has auto-update disabled, skipping recalculation',
+          );
+        }
         return;
       }
 
       final allTransactions = await _transactionService.fetchTransactions();
       await _recalculateGoal(goal, allTransactions);
     } catch (e) {
-      print('Error recalculating goal $goalId: $e');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Error recalculating goal $goalId: $e',
+        );
+      }
       rethrow;
     }
   }
 
   /// Recalculate a single goal based on all transactions
   Future<void> _recalculateGoal(Goal goal, List allTransactions) async {
-    print('Recalculating goal: ${goal.name}');
+    if (kDebugMode) {
+      debugPrint('GoalRecalculationService: Recalculating goal: ${goal.name}');
+    }
 
     double calculatedAmount = 0.0;
 
@@ -95,9 +116,11 @@ class GoalRecalculationService {
     // Update the goal if the calculated amount differs from current
     if ((calculatedAmount - goal.currentAmount).abs() > 0.01) {
       // Allow for small floating point differences
-      print(
-        'Updating goal ${goal.name}: ${goal.currentAmount} -> $calculatedAmount',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Updating goal ${goal.name}: ${goal.currentAmount} -> $calculatedAmount',
+        );
+      }
 
       final isCompleted = calculatedAmount >= goal.targetAmount;
       final updatedGoal = goal.copyWith(
@@ -108,7 +131,11 @@ class GoalRecalculationService {
 
       await _goalService.updateGoal(updatedGoal);
     } else {
-      print('Goal ${goal.name} already up to date');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Goal ${goal.name} already up to date',
+        );
+      }
     }
   }
 
@@ -145,7 +172,11 @@ class GoalRecalculationService {
 
   /// Force recalculation of all goals (useful for migration or data fixes)
   Future<void> forceRecalculateAllGoals() async {
-    print('Force recalculating ALL goals (including manual ones)...');
+    if (kDebugMode) {
+      debugPrint(
+        'GoalRecalculationService: Force recalculating ALL goals (including manual ones)...',
+      );
+    }
 
     try {
       final futures = await Future.wait([
@@ -156,20 +187,34 @@ class GoalRecalculationService {
       final goals = futures[0] as List<Goal>;
       final allTransactions = futures[1] as List;
 
-      print('Force recalculating ${goals.length} goals');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Force recalculating ${goals.length} goals',
+        );
+      }
 
       for (final goal in goals) {
         // Force recalculate even manual goals, but don't update manual ones
         if (goal.autoUpdate) {
           await _recalculateGoal(goal, allTransactions);
         } else {
-          print('Skipping manual goal: ${goal.name}');
+          if (kDebugMode) {
+            debugPrint(
+              'GoalRecalculationService: Skipping manual goal: ${goal.name}',
+            );
+          }
         }
       }
 
-      print('Force recalculation completed');
+      if (kDebugMode) {
+        debugPrint('GoalRecalculationService: Force recalculation completed');
+      }
     } catch (e) {
-      print('Error during force recalculation: $e');
+      if (kDebugMode) {
+        debugPrint(
+          'GoalRecalculationService: Error during force recalculation: $e',
+        );
+      }
       rethrow;
     }
   }

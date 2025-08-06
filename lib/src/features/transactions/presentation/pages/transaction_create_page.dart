@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../data/services/transaction_service.dart';
 import '../../data/models/transaction_model.dart';
 import '../../../dashboard/data/services/dashboard_sync_service.dart';
@@ -10,15 +11,19 @@ import '../../../goals/data/services/goal_transaction_sync_service.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 import '../../../../shared/theme/app_spacing.dart';
 import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/widgets/receipt_scanner_widget.dart';
+import '../../../../shared/services/receipt_ocr_service.dart';
 
 class TransactionCreatePage extends StatefulWidget {
   final String mode;
   final Transaction? transaction;
+  final String? initialTransactionType;
 
   const TransactionCreatePage({
     super.key,
     this.mode = 'create',
     this.transaction,
+    this.initialTransactionType,
   });
 
   @override
@@ -96,6 +101,12 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
   @override
   void initState() {
     super.initState();
+
+    // Set initial transaction type from parameter or default to 'expense'
+    if (widget.initialTransactionType != null &&
+        _categories.containsKey(widget.initialTransactionType)) {
+      _transactionType = widget.initialTransactionType!;
+    }
 
     // Set up goal update callback
     GoalTransactionSyncService().setGoalUpdateCallback((goalName, newAmount) {
@@ -239,65 +250,40 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
           _isLoading = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        widget.mode == 'edit'
-                            ? 'Transaction updated successfully!'
-                            : '${_transactionType == 'expense' ? 'Expense' : 'Income'} added successfully!',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
+        final snackBar = SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.mode == 'edit'
+                      ? 'Transaction updated successfully!'
+                      : '${_transactionType == 'expense' ? 'Expense' : 'Income'} added successfully!',
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
-                if (_goalUpdateMessage != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.flag,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _goalUpdateMessage!,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            duration: const Duration(seconds: 2),
+              ),
+            ],
           ),
+          backgroundColor: AppTheme.successColor, // Always green for success
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.only(
+            bottom: 120, // Add bottom margin to avoid button overlap
+            left: 16,
+            right: 16,
+          ),
+          duration: const Duration(milliseconds: 1500),
         );
 
-        // Add a small delay before navigation to prevent any UI conflicts
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) {
-            // Navigate back to previous screen
-            context.pop();
+        ScaffoldMessenger.of(context).showSnackBar(snackBar).closed.then((_) {
+          // Navigate only after snackbar is closed/dismissed
+          if (mounted && context.mounted) {
+            // Dismiss any open keyboards first
+            FocusScope.of(context).unfocus();
+            context.go('/transactions');
           }
         });
       }
@@ -388,6 +374,241 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
     }
   }
 
+  /// Handle back navigation with unsaved changes check
+  void _handleBackNavigation() {
+    // Check if form has been modified
+    final hasChanges =
+        _descriptionController.text.isNotEmpty ||
+        _amountController.text.isNotEmpty ||
+        _notesController.text.isNotEmpty ||
+        _selectedDate != DateTime.now().subtract(const Duration(days: 0)) ||
+        (widget.mode == 'edit' && _hasFormChanges());
+
+    if (hasChanges && widget.mode != 'edit') {
+      // Show confirmation dialog for unsaved changes
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              icon: const Icon(
+                Icons.warning_amber_rounded,
+                color: AppTheme.warningColor,
+              ),
+              title: const Text('Discard Changes?'),
+              content: const Text(
+                'You have unsaved changes that will be lost. Are you sure you want to go back?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Stay'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    context.pop(); // Go back
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.warningColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Discard'),
+                ),
+              ],
+            ),
+      );
+    } else {
+      // No changes or edit mode, go back directly
+      context.pop();
+    }
+  }
+
+  /// Check if form has changes in edit mode
+  bool _hasFormChanges() {
+    if (widget.transaction == null) return false;
+
+    final original = widget.transaction!;
+    return _descriptionController.text != original.description ||
+        _amountController.text != original.amount.abs().toStringAsFixed(2) ||
+        _notesController.text != (original.notes ?? '') ||
+        _selectedDate.difference(original.date).inDays.abs() > 0;
+  }
+
+  /// Handle receipt scan result and auto-fill form fields
+  void _handleReceiptScan(ReceiptScanResult result) {
+    print('🔍 TRANSACTION DEBUG: Receipt scan callback called');
+    final data = result.extractedData;
+
+    print('🔍 TRANSACTION DEBUG: Processing scan result...');
+    print('🔍 TRANSACTION DEBUG: Raw text length: ${result.rawText.length}');
+    print('🔍 TRANSACTION DEBUG: Merchant: ${data.merchantName}');
+    print('🔍 TRANSACTION DEBUG: Amount: ${data.totalAmount}');
+    print('🔍 TRANSACTION DEBUG: Date: ${data.date}');
+    print('🔍 TRANSACTION DEBUG: Has essential data: ${data.hasEssentialData}');
+    print('🔍 TRANSACTION DEBUG: Items count: ${data.items.length}');
+
+    // Auto-fill description with merchant name or suggested description
+    if (data.merchantName != null && data.merchantName!.isNotEmpty) {
+      print(
+        '🔍 TRANSACTION DEBUG: Setting description to merchant: ${data.merchantName}',
+      );
+      _descriptionController.text = data.merchantName!;
+    } else if (data.suggestedDescription.isNotEmpty) {
+      print(
+        '🔍 TRANSACTION DEBUG: Setting description to suggested: ${data.suggestedDescription}',
+      );
+      _descriptionController.text = data.suggestedDescription;
+    }
+
+    // Auto-fill amount (use absolute value since transaction type will handle sign)
+    if (data.totalAmount != null) {
+      print('🔍 TRANSACTION DEBUG: Setting amount to: ${data.totalAmount}');
+      _amountController.text = data.totalAmount!.abs().toStringAsFixed(2);
+    }
+
+    // Auto-select category based on merchant/content
+    final suggestedCategory = data.suggestedCategory;
+    print('🔍 TRANSACTION DEBUG: Suggested category: $suggestedCategory');
+    if (_categories[_transactionType]?.contains(suggestedCategory) == true) {
+      print('🔍 TRANSACTION DEBUG: Setting category to: $suggestedCategory');
+      setState(() {
+        _selectedCategory = suggestedCategory;
+      });
+    }
+
+    // Auto-fill date if extracted
+    if (data.date != null) {
+      print('🔍 TRANSACTION DEBUG: Setting date to: ${data.date}');
+      setState(() {
+        _selectedDate = data.date!;
+      });
+    }
+
+    // Auto-fill notes with receipt details if we have items
+    if (data.items.isNotEmpty) {
+      final itemsText = data.items
+          .take(3) // Limit to first 3 items to avoid too much text
+          .map(
+            (item) =>
+                '${item.description} (\$${item.amount.toStringAsFixed(2)})',
+          )
+          .join(', ');
+      _notesController.text = 'Items: $itemsText';
+
+      if (data.items.length > 3) {
+        _notesController.text += '... and ${data.items.length - 3} more items';
+      }
+      print('🔍 TRANSACTION DEBUG: Set notes with ${data.items.length} items');
+    }
+
+    // Show debug dialog first
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('🔍 OCR Debug Results'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Raw Text (${result.rawText.length} characters):'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.grey[50],
+                      ),
+                      child: Text(
+                        result.rawText.isEmpty
+                            ? '❌ NO TEXT EXTRACTED!'
+                            : result.rawText,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Extracted Data:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('• Merchant: ${data.merchantName ?? "❌ None found"}'),
+                    Text(
+                      '• Amount: ${data.totalAmount != null ? "\$${data.totalAmount!.toStringAsFixed(2)}" : "❌ None found"}',
+                    ),
+                    Text(
+                      '• Date: ${data.date?.toString().split(' ')[0] ?? "❌ None found"}',
+                    ),
+                    Text('• Items: ${data.items.length}'),
+                    Text('• Category: ${data.suggestedCategory}'),
+                    Text(
+                      '• Has essential data: ${data.hasEssentialData ? "✅ Yes" : "❌ No"}',
+                    ),
+                    if (data.items.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Text('Items found:'),
+                      ...data.items
+                          .take(3)
+                          .map(
+                            (item) => Text(
+                              '  - ${item.description}: \$${item.amount.toStringAsFixed(2)}',
+                            ),
+                          ),
+                      if (data.items.length > 3)
+                        Text('  ... and ${data.items.length - 3} more'),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+    );
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              data.hasEssentialData ? Icons.check_circle : Icons.warning,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                data.hasEssentialData
+                    ? 'Receipt scanned! Merchant: ${data.merchantName ?? "N/A"}, Amount: \$${data.totalAmount?.toStringAsFixed(2) ?? "N/A"}'
+                    : 'Receipt scanned with limited data (${result.rawText.length} chars extracted)',
+              ),
+            ),
+          ],
+        ),
+        backgroundColor:
+            data.hasEssentialData
+                ? AppTheme.successColor
+                : AppTheme.warningColor,
+        duration: const Duration(seconds: 5),
+      ),
+    );
+
+    // Trigger goal impact check
+    _checkGoalImpacts();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -408,8 +629,7 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
                   child: Row(
                     children: [
                       IconButton(
-                        onPressed:
-                            () => context.pop(),
+                        onPressed: () => _handleBackNavigation(),
                         icon: Icon(
                           Icons.arrow_back_ios_new,
                           color:
@@ -501,6 +721,15 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
                                     // Amount Input
                                     _buildAmountInput(theme, colorScheme),
                                     const SizedBox(height: AppSpacing.md),
+
+                                    // Receipt Scanner Section (only show for new transactions)
+                                    if (!isEditMode)
+                                      _buildReceiptScannerSection(
+                                        theme,
+                                        colorScheme,
+                                      ),
+                                    if (!isEditMode)
+                                      const SizedBox(height: AppSpacing.md),
 
                                     // Description Input
                                     _buildDescriptionInput(theme, colorScheme),
@@ -712,9 +941,10 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
               ),
             ),
             filled: true,
-            fillColor: Theme.of(context).brightness == Brightness.dark
-                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : colorScheme.surface.withValues(alpha: 0.5),
+            fillColor:
+                Theme.of(context).brightness == Brightness.dark
+                    ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -759,9 +989,10 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
               color: colorScheme.onSurfaceVariant,
             ),
             filled: true,
-            fillColor: Theme.of(context).brightness == Brightness.dark
-                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : colorScheme.surface.withValues(alpha: 0.5),
+            fillColor:
+                Theme.of(context).brightness == Brightness.dark
+                    ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -774,6 +1005,230 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
         ),
       ],
     );
+  }
+
+  // Helper method to build receipt scanner section
+  Widget _buildReceiptScannerSection(ThemeData theme, ColorScheme colorScheme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with AI badge
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [colorScheme.primary, colorScheme.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      'AI',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(Icons.receipt_long, color: colorScheme.primary, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Smart Receipt Scanner',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Description
+          Text(
+            'Instantly extract merchant name, amount, date, and items from any receipt using AI-powered text recognition.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Tips section (collapsible)
+          Theme(
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(top: 8, bottom: 4),
+              leading: Icon(
+                Icons.lightbulb_outline,
+                color: Colors.amber[700],
+                size: 20,
+              ),
+              title: Text(
+                'Scanning Tips',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.amber.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTipItem(
+                        '📱',
+                        'Hold phone steady and focus on receipt',
+                      ),
+                      _buildTipItem(
+                        '💡',
+                        'Ensure good lighting, avoid shadows',
+                      ),
+                      _buildTipItem(
+                        '📄',
+                        'Keep receipt flat and fully visible',
+                      ),
+                      _buildTipItem(
+                        '🔍',
+                        'Include total amount and merchant name',
+                      ),
+                      _buildTipItem('✨', 'Works best with printed receipts'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Enhanced scan buttons
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _openReceiptScanner(ImageSource.camera),
+                  icon: const Icon(Icons.camera_alt, size: 20),
+                  label: const Text('Take Photo'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _openReceiptScanner(ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library, size: 20),
+                  label: const Text('From Gallery'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a tip item with emoji and text
+  Widget _buildTipItem(String emoji, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.amber[800],
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Open receipt scanner with the specified source
+  void _openReceiptScanner(ImageSource source) async {
+    try {
+      final ocrService = ReceiptOCRService();
+      final result = await ocrService.scanReceiptFromSource(source);
+
+      if (result != null) {
+        _handleReceiptScan(result);
+      }
+
+      ocrService.dispose();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Failed to scan receipt: ${e.toString()}'),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 
   // Helper method to build category selection
@@ -791,9 +1246,10 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
         const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                Theme.of(context).brightness == Brightness.dark
+                    ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
           ),
           child: DropdownButtonFormField<String>(
@@ -903,9 +1359,10 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                  : colorScheme.surface.withValues(alpha: 0.5),
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                      : colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -956,9 +1413,10 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
               color: colorScheme.onSurfaceVariant,
             ),
             filled: true,
-            fillColor: Theme.of(context).brightness == Brightness.dark
-                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : colorScheme.surface.withValues(alpha: 0.5),
+            fillColor:
+                Theme.of(context).brightness == Brightness.dark
+                    ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -978,9 +1436,10 @@ class _TransactionCreatePageState extends State<TransactionCreatePage> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

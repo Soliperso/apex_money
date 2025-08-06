@@ -7,79 +7,79 @@ import '../theme/app_spacing.dart';
 
 class AppSettingsMenu extends StatelessWidget {
   final Color? iconColor;
-  
+
   const AppSettingsMenu({Key? key, this.iconColor}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Determine icon color based on context
-    final effectiveIconColor = iconColor ?? 
-      (theme.brightness == Brightness.dark
-        ? theme.colorScheme.onSurfaceVariant
-        : Colors.white.withValues(alpha: 0.9));
-    
+    final effectiveIconColor =
+        iconColor ??
+        (theme.brightness == Brightness.dark
+            ? theme.colorScheme.onSurfaceVariant
+            : Colors.white.withValues(alpha: 0.9));
+
     return PopupMenuButton<String>(
       icon: Icon(Icons.settings, color: effectiveIconColor),
       onSelected: (value) => _handleMenuSelection(context, value),
-      itemBuilder: (BuildContext context) => [
-        PopupMenuItem<String>(
-          value: 'profile',
-          child: Row(
-            children: [
-              Icon(
-                Icons.person,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              const Text('Profile'),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'theme',
-          child: Consumer<ThemeProvider>(
-            builder: (context, themeProvider, child) {
-              return Row(
+      itemBuilder:
+          (BuildContext context) => [
+            PopupMenuItem<String>(
+              value: 'profile',
+              child: Row(
                 children: [
                   Icon(
-                    themeProvider.isDarkMode 
-                      ? Icons.light_mode 
-                      : Icons.dark_mode,
+                    Icons.person,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                   const SizedBox(width: AppSpacing.sm),
+                  const Text('Profile'),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'theme',
+              child: Consumer<ThemeProvider>(
+                builder: (context, themeProvider, child) {
+                  return Row(
+                    children: [
+                      Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode',
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem<String>(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.logout,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
-                    themeProvider.isDarkMode 
-                      ? 'Light Mode' 
-                      : 'Dark Mode',
+                    'Logout',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
-              );
-            },
-          ),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem<String>(
-          value: 'logout',
-          child: Row(
-            children: [
-              Icon(
-                Icons.logout,
-                color: Theme.of(context).colorScheme.error,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Logout',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
     );
   }
 
@@ -131,9 +131,7 @@ class AppSettingsMenu extends StatelessWidget {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Perform logout
@@ -142,10 +140,10 @@ class AppSettingsMenu extends StatelessWidget {
       // Hide loading indicator
       if (context.mounted) {
         Navigator.of(context).pop();
-        
+
         // Navigate to login
         context.go('/login');
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -158,7 +156,7 @@ class AppSettingsMenu extends StatelessWidget {
       // Hide loading indicator
       if (context.mounted) {
         Navigator.of(context).pop();
-        
+
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

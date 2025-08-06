@@ -51,30 +51,21 @@ class BiometricAuthService {
     String authToken,
   ) async {
     try {
-      print('🔐 BiometricAuthService: Starting enableBiometricAuth...');
-      print('🔐 BiometricAuthService: Email: $email');
-      print('🔐 BiometricAuthService: Token: ${authToken.substring(0, 20)}...');
-
       final bool isAuthenticated = await _authenticateWithBiometric(
         reason: 'Enable biometric authentication for secure login',
       );
-      print('🔐 BiometricAuthService: Authentication result: $isAuthenticated');
 
       if (isAuthenticated) {
-        print('🔐 BiometricAuthService: Storing credentials securely...');
         await _secureStorage.write(key: _userEmailKey, value: email);
         await _secureStorage.write(key: _biometricTokenKey, value: authToken);
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(_biometricEnabledKey, true);
-        print('🔐 BiometricAuthService: Biometric auth enabled successfully!');
 
         return true;
       }
-      print('🔐 BiometricAuthService: Authentication failed or was cancelled');
       return false;
     } catch (e) {
-      print('🔐 BiometricAuthService: Error enabling biometric auth: $e');
       return false;
     }
   }
@@ -119,11 +110,6 @@ class BiometricAuthService {
     required String reason,
   }) async {
     try {
-      print(
-        '🔐 BiometricAuthService: Prompting for biometric authentication...',
-      );
-      print('🔐 BiometricAuthService: Reason: $reason');
-
       final bool isAuthenticated = await _localAuth.authenticate(
         localizedReason: reason,
         options: const AuthenticationOptions(
@@ -134,12 +120,8 @@ class BiometricAuthService {
         ),
       );
 
-      print(
-        '🔐 BiometricAuthService: Biometric authentication result: $isAuthenticated',
-      );
       return isAuthenticated;
     } catch (e) {
-      print('🔐 BiometricAuthService: Biometric authentication error: $e');
       return false;
     }
   }

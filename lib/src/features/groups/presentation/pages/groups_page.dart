@@ -1,3 +1,5 @@
+// GROUPS FUNCTIONALITY COMMENTED OUT - ENTIRE FILE DISABLED
+/*
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -69,27 +71,7 @@ class _GroupsPageState extends State<GroupsPage> {
                                 : Colors.white,
                       ),
                     ),
-                    actions: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.refresh,
-                          color:
-                              theme.brightness == Brightness.dark
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.white,
-                        ),
-                        onPressed: () {
-                          final provider = context.read<GroupsProvider>();
-                          provider.loadGroups();
-                          provider.loadInvitations();
-                        },
-                      ),
-                      AppSettingsMenu(
-                        iconColor: theme.brightness == Brightness.dark
-                            ? theme.colorScheme.onSurface
-                            : Colors.white,
-                      ),
-                    ],
+                    actions: [],
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -106,10 +88,15 @@ class _GroupsPageState extends State<GroupsPage> {
                               width: double.infinity,
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                color: theme.colorScheme.errorContainer
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                                 border: Border.all(
-                                  color: theme.colorScheme.error.withValues(alpha: 0.3),
+                                  color: theme.colorScheme.error.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   width: 1,
                                 ),
                               ),
@@ -122,13 +109,19 @@ class _GroupsPageState extends State<GroupsPage> {
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: theme.colorScheme.errorContainer,
-                                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                          color:
+                                              theme.colorScheme.errorContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusSm,
+                                          ),
                                         ),
                                         child: Icon(
                                           Icons.error_outline,
                                           size: 18,
-                                          color: theme.colorScheme.onErrorContainer,
+                                          color:
+                                              theme
+                                                  .colorScheme
+                                                  .onErrorContainer,
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -176,4 +169,4 @@ class _GroupsPageState extends State<GroupsPage> {
     );
   }
 }
-
+*/

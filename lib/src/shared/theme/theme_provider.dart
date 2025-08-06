@@ -3,11 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
-  
+
   ThemeMode _themeMode = ThemeMode.system;
-  
+
   ThemeMode get themeMode => _themeMode;
-  
+
   bool get isDarkMode {
     switch (_themeMode) {
       case ThemeMode.dark:
@@ -15,16 +15,17 @@ class ThemeProvider extends ChangeNotifier {
       case ThemeMode.light:
         return false;
       case ThemeMode.system:
-        return WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+        return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark;
     }
   }
-  
+
   /// Initialize theme from saved preferences
   Future<void> loadTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final themeIndex = prefs.getInt(_themeKey);
-      
+
       if (themeIndex != null) {
         _themeMode = ThemeMode.values[themeIndex];
         notifyListeners();
@@ -34,14 +35,14 @@ class ThemeProvider extends ChangeNotifier {
       _themeMode = ThemeMode.system;
     }
   }
-  
+
   /// Set theme mode and save to preferences
   Future<void> setThemeMode(ThemeMode themeMode) async {
     if (_themeMode == themeMode) return;
-    
+
     _themeMode = themeMode;
     notifyListeners();
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_themeKey, themeMode.index);
@@ -50,20 +51,19 @@ class ThemeProvider extends ChangeNotifier {
       debugPrint('Failed to save theme preference: $e');
     }
   }
-  
+
   /// Toggle between light and dark mode (ignores system)
   Future<void> toggleTheme() async {
-    final newTheme = _themeMode == ThemeMode.dark 
-      ? ThemeMode.light 
-      : ThemeMode.dark;
+    final newTheme =
+        _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     await setThemeMode(newTheme);
   }
-  
+
   /// Set to system theme
   Future<void> setSystemTheme() async {
     await setThemeMode(ThemeMode.system);
   }
-  
+
   /// Get current brightness based on theme mode
   Brightness getCurrentBrightness(BuildContext context) {
     switch (_themeMode) {
@@ -75,7 +75,7 @@ class ThemeProvider extends ChangeNotifier {
         return MediaQuery.of(context).platformBrightness;
     }
   }
-  
+
   /// Get theme mode display name
   String get themeModeDisplayName {
     switch (_themeMode) {
@@ -87,7 +87,7 @@ class ThemeProvider extends ChangeNotifier {
         return 'System';
     }
   }
-  
+
   /// Get theme mode icon
   IconData get themeModeIcon {
     switch (_themeMode) {

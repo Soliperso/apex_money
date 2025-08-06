@@ -48,7 +48,30 @@ class GroupsProvider extends ChangeNotifier {
       final groups = await _groupService.fetchUserGroups();
       _groups = groups;
     } catch (e) {
-      _setError(e.toString());
+      print('Groups loading error: $e'); // Debug log
+
+      // Handle different types of errors gracefully
+      if (e.toString().contains('404')) {
+        print('Groups endpoint not implemented yet - using empty list');
+        _groups = [];
+      } else if (e.toString().contains('No internet connection')) {
+        _setError(
+          'No internet connection. Please check your connection and try again.',
+        );
+      } else if (e.toString().contains('timeout')) {
+        _setError('Request timed out. Please try again.');
+      } else if (e.toString().contains('type \'Null\' is not a subtype')) {
+        print('Data parsing error - likely empty/malformed response');
+        _groups = [];
+        _setError(
+          'Unable to load groups. The server may be experiencing issues.',
+        );
+      } else if (e.toString().contains('Authentication required')) {
+        _setError('Please log in again to continue.');
+      } else {
+        // Generic error message for other cases
+        _setError('Unable to load groups. Please try again later.');
+      }
     } finally {
       _setLoading(false);
     }
@@ -66,13 +89,20 @@ class GroupsProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      final newGroup = await _groupService.createGroup(
-        name: name,
-        description: description,
-        imageUrl: imageUrl,
-        defaultCurrency: defaultCurrency,
-        allowMemberInvites: allowMemberInvites,
-      );
+      final newGroup = await _groupService
+          .createGroup(
+            name: name,
+            description: description,
+            imageUrl: imageUrl,
+            defaultCurrency: defaultCurrency,
+            allowMemberInvites: allowMemberInvites,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              throw Exception('Request timed out - please try again');
+            },
+          );
 
       // Add to local list
       _groups.add(newGroup);
@@ -80,6 +110,8 @@ class GroupsProvider extends ChangeNotifier {
 
       return newGroup;
     } catch (e) {
+      // Log the actual API error for debugging
+      print('Create group API error: $e');
       _setError(e.toString());
       return null;
     } finally {
@@ -274,7 +306,14 @@ class GroupsProvider extends ChangeNotifier {
       _invitations = invitations;
       notifyListeners();
     } catch (e) {
-      _setError(e.toString());
+      // Handle 404 errors gracefully - invitations endpoint might not be implemented yet
+      if (e.toString().contains('404')) {
+        print('Invitations endpoint not implemented yet - using empty list');
+        _invitations = [];
+        notifyListeners();
+      } else {
+        _setError(e.toString());
+      }
     }
   }
 
@@ -328,6 +367,136 @@ class GroupsProvider extends ChangeNotifier {
     return _invitations
         .where((inv) => inv.groupId == groupId && inv.isPending)
         .toList();
+  }
+
+  // ============================================================================
+  // ENHANCED MEMBER CRUD OPERATIONS
+  // ============================================================================
+
+  /// Get all members of a specific group
+  Future<List<GroupMemberModel>> getGroupMembers(String groupId) async {
+    _clearError();
+
+    try {
+      return await _groupService.getGroupMembers(groupId);
+    } catch (e) {
+      _setError(e.toString());
+      return [];
+    }
+  }
+
+  /// Get specific member details by user ID within a group
+  Future<GroupMemberModel?> getGroupMemberById({
+    required String groupId,
+    required String userId,
+  }) async {
+    _clearError();
+
+    try {
+      return await _groupService.getGroupMemberById(
+        groupId: groupId,
+        userId: userId,
+      );
+    } catch (e) {
+      _setError(e.toString());
+      return null;
+    }
+  }
+
+  /// Update member role within a group
+  Future<bool> updateMemberRole({
+    required String groupId,
+    required String userId,
+    required GroupMemberRole newRole,
+  }) async {
+    _clearError();
+
+    try {
+      await _groupService.updateMemberRole(
+        groupId: groupId,
+        userId: userId,
+        newRole: newRole,
+      );
+
+      // Reload groups to reflect changes
+      await loadGroups();
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  /// Update member status within a group
+  Future<bool> updateMemberStatus({
+    required String groupId,
+    required String userId,
+    required GroupMemberStatus newStatus,
+  }) async {
+    _clearError();
+
+    try {
+      await _groupService.updateMemberStatus(
+        groupId: groupId,
+        userId: userId,
+        newStatus: newStatus,
+      );
+
+      // Reload groups to reflect changes
+      await loadGroups();
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  /// Get current user's membership details for a specific group
+  Future<GroupMemberModel?> getCurrentUserMembership(String groupId) async {
+    _clearError();
+
+    try {
+      return await _groupService.getCurrentUserMembership(groupId);
+    } catch (e) {
+      _setError(e.toString());
+      return null;
+    }
+  }
+
+  /// Check if current user can manage a specific group (is admin)
+  Future<bool> canManageGroup(String groupId) async {
+    try {
+      return await _groupService.canManageGroup(groupId);
+    } catch (e) {
+      print('Error checking group management permissions: $e');
+      return false;
+    }
+  }
+
+  /// Bulk invite multiple users to a group by email
+  Future<bool> bulkInviteMembers({
+    required String groupId,
+    required List<String> emails,
+    String? message,
+  }) async {
+    _clearError();
+
+    try {
+      final invitations = await _groupService.bulkInviteMembers(
+        groupId: groupId,
+        emails: emails,
+        message: message,
+      );
+
+      // Add new invitations to local list
+      _invitations.addAll(invitations);
+      notifyListeners();
+
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    }
   }
 
   /// Helper methods for state management

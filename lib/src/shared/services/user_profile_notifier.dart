@@ -31,6 +31,7 @@ class UserProfileNotifier {
     } catch (e) {
       // Add error handling if needed
       print('Error fetching user profile: $e');
+      rethrow; // Important: rethrow the exception so calling code can handle it
     }
   }
 

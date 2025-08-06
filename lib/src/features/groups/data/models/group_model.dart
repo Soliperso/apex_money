@@ -27,21 +27,45 @@ class GroupModel {
 
   /// Factory constructor from JSON (API response)
   factory GroupModel.fromJson(Map<String, dynamic> json) {
+    // Ensure we have required fields
+    if (json['name'] == null || json['name'].toString().isEmpty) {
+      throw Exception('Group name is required but was null or empty');
+    }
+
     return GroupModel(
       id: json['id']?.toString(),
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      imageUrl: json['image_url'] as String?,
-      adminId: json['admin_id']?.toString() ?? '',
-      createdAt: DateTime.parse(
-        json['created_at'] ?? DateTime.now().toIso8601String(),
-      ),
-      updatedAt: DateTime.parse(
-        json['updated_at'] ?? DateTime.now().toIso8601String(),
-      ),
-      isActive: json['is_active'] as bool? ?? true,
-      defaultCurrency: json['default_currency'] as String? ?? 'USD',
-      allowMemberInvites: json['allow_member_invites'] as bool? ?? true,
+      name: json['name'].toString(),
+      description: json['description']?.toString(),
+      imageUrl: json['image_url']?.toString() ?? json['imageUrl']?.toString(),
+      // Handle both API field variations
+      adminId:
+          json['admin_id']?.toString() ??
+          json['createdByUserId']?.toString() ??
+          json['admin_user_id']?.toString() ??
+          '',
+      createdAt:
+          DateTime.tryParse(
+            json['created_at']?.toString() ??
+                json['createdAt']?.toString() ??
+                '',
+          ) ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(
+            json['updated_at']?.toString() ??
+                json['updatedAt']?.toString() ??
+                '',
+          ) ??
+          DateTime.now(),
+      isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
+      defaultCurrency:
+          json['default_currency']?.toString() ??
+          json['defaultCurrency']?.toString() ??
+          'USD',
+      allowMemberInvites:
+          json['allow_member_invites'] as bool? ??
+          json['allowMemberInvites'] as bool? ??
+          true,
     );
   }
 

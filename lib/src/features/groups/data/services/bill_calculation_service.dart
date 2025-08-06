@@ -3,7 +3,6 @@ import '../models/debt_model.dart';
 import '../models/group_member_model.dart';
 
 class BillCalculationService {
-  
   /// Calculate bill splits based on the split method
   static List<BillSplitModel> calculateSplits({
     required String billId,
@@ -17,9 +16,19 @@ class BillCalculationService {
       case 'equal':
         return _calculateEqualSplit(billId, totalAmount, selectedMembers);
       case 'percentage':
-        return _calculatePercentageSplit(billId, totalAmount, selectedMembers, percentages ?? {});
+        return _calculatePercentageSplit(
+          billId,
+          totalAmount,
+          selectedMembers,
+          percentages ?? {},
+        );
       case 'custom':
-        return _calculateCustomSplit(billId, totalAmount, selectedMembers, customAmounts ?? {});
+        return _calculateCustomSplit(
+          billId,
+          totalAmount,
+          selectedMembers,
+          customAmounts ?? {},
+        );
       default:
         throw ArgumentError('Unknown split method: $splitMethod');
     }
@@ -32,16 +41,22 @@ class BillCalculationService {
     List<GroupMemberModel> members,
   ) {
     if (members.isEmpty) return [];
-    
+
     final amountPerPerson = totalAmount / members.length;
     final percentage = 100.0 / members.length;
-    
-    return members.map((member) => BillSplitModel(
-      billId: billId,
-      userId: member.userId,
-      amount: amountPerPerson,
-      percentage: percentage,
-    )).toList();
+
+    return members
+        .map(
+          (member) => BillSplitModel(
+            billId: billId,
+            userId: member.userId,
+            userName: member.userName,
+            amount: amountPerPerson,
+            percentage: percentage,
+            isCustomAmount: false,
+          ),
+        )
+        .toList();
   }
 
   /// Calculate percentage-based split
@@ -52,20 +67,27 @@ class BillCalculationService {
     Map<String, double> percentages,
   ) {
     // Validate percentages sum to 100%
-    final totalPercentage = percentages.values.fold<double>(0.0, (sum, percentage) => sum + percentage);
+    final totalPercentage = percentages.values.fold<double>(
+      0.0,
+      (sum, percentage) => sum + percentage,
+    );
     if ((totalPercentage - 100.0).abs() > 0.01) {
-      throw ArgumentError('Percentages must sum to 100%. Current sum: $totalPercentage%');
+      throw ArgumentError(
+        'Percentages must sum to 100%. Current sum: $totalPercentage%',
+      );
     }
 
     return members.map((member) {
       final percentage = percentages[member.userId] ?? 0.0;
       final amount = (totalAmount * percentage) / 100.0;
-      
+
       return BillSplitModel(
         billId: billId,
         userId: member.userId,
+        userName: member.userName,
         amount: amount,
         percentage: percentage,
+        isCustomAmount: false,
       );
     }).toList();
   }
@@ -78,20 +100,27 @@ class BillCalculationService {
     Map<String, double> customAmounts,
   ) {
     // Validate custom amounts sum to total
-    final totalCustom = customAmounts.values.fold<double>(0.0, (sum, amount) => sum + amount);
+    final totalCustom = customAmounts.values.fold<double>(
+      0.0,
+      (sum, amount) => sum + amount,
+    );
     if ((totalCustom - totalAmount).abs() > 0.01) {
-      throw ArgumentError('Custom amounts must sum to total amount. Current sum: \$${totalCustom.toStringAsFixed(2)}, Expected: \$${totalAmount.toStringAsFixed(2)}');
+      throw ArgumentError(
+        'Custom amounts must sum to total amount. Current sum: \$${totalCustom.toStringAsFixed(2)}, Expected: \$${totalAmount.toStringAsFixed(2)}',
+      );
     }
 
     return members.map((member) {
       final amount = customAmounts[member.userId] ?? 0.0;
       final percentage = totalAmount > 0 ? (amount / totalAmount) * 100.0 : 0.0;
-      
+
       return BillSplitModel(
         billId: billId,
         userId: member.userId,
+        userName: member.userName,
         amount: amount,
         percentage: percentage,
+        isCustomAmount: true,
       );
     }).toList();
   }
@@ -100,56 +129,62 @@ class BillCalculationService {
   static List<DebtModel> calculateDebtsFromBill(BillModel bill) {
     final debts = <DebtModel>[];
     final payerId = bill.paidByUserId;
-    
+
     for (final split in bill.splits) {
       // Skip if this person paid the bill (they don't owe themselves)
       if (split.userId == payerId) continue;
-      
+
       // Create debt from each split to the payer
       final debt = DebtModel(
         groupId: bill.groupId,
         debtorUserId: split.userId,
+        debtorName: split.userName,
         creditorUserId: payerId,
-        amount: split.amount,
+        creditorName: null, // Will be populated when we have payer info
+        originalAmount: split.amount,
+        paidAmount: 0.0,
+        remainingAmount: split.amount,
         currency: bill.currency,
-        status: 'active',
+        status: 'pending',
         billIds: [bill.id!],
         createdDate: bill.dateCreated,
         payments: [],
       );
-      
+
       debts.add(debt);
     }
-    
+
     return debts;
   }
 
   /// Optimize debts by combining and offsetting debts between same people
   static List<DebtModel> optimizeDebts(List<DebtModel> debts) {
     final optimizedDebts = <String, DebtModel>{};
-    
+
     for (final debt in debts) {
       if (debt.status != 'active') continue;
-      
+
       final key = _createDebtKey(debt.debtorUserId, debt.creditorUserId);
       final reverseKey = _createDebtKey(debt.creditorUserId, debt.debtorUserId);
-      
+
       if (optimizedDebts.containsKey(reverseKey)) {
         // There's a reverse debt - offset them
         final reverseDebt = optimizedDebts[reverseKey]!;
-        final netAmount = debt.amount - reverseDebt.amount;
-        
+        final netAmount = debt.originalAmount - reverseDebt.originalAmount;
+
         if (netAmount > 0.01) {
           // Original debt is larger
           optimizedDebts[key] = debt.copyWith(
-            amount: netAmount,
+            originalAmount: netAmount,
+            remainingAmount: netAmount,
             billIds: [...debt.billIds, ...reverseDebt.billIds],
           );
           optimizedDebts.remove(reverseKey);
         } else if (netAmount < -0.01) {
           // Reverse debt is larger
           optimizedDebts[reverseKey] = reverseDebt.copyWith(
-            amount: -netAmount,
+            originalAmount: -netAmount,
+            remainingAmount: -netAmount,
             billIds: [...reverseDebt.billIds, ...debt.billIds],
           );
         } else {
@@ -159,8 +194,10 @@ class BillCalculationService {
       } else if (optimizedDebts.containsKey(key)) {
         // Add to existing debt
         final existingDebt = optimizedDebts[key]!;
+        final newAmount = existingDebt.originalAmount + debt.originalAmount;
         optimizedDebts[key] = existingDebt.copyWith(
-          amount: existingDebt.amount + debt.amount,
+          originalAmount: newAmount,
+          remainingAmount: newAmount - existingDebt.paidAmount,
           billIds: [...existingDebt.billIds, ...debt.billIds],
         );
       } else {
@@ -168,7 +205,7 @@ class BillCalculationService {
         optimizedDebts[key] = debt;
       }
     }
-    
+
     return optimizedDebts.values.toList();
   }
 
@@ -180,29 +217,33 @@ class BillCalculationService {
   /// Calculate group balance summary
   static Map<String, double> calculateGroupBalances(List<DebtModel> debts) {
     final balances = <String, double>{};
-    
+
     for (final debt in debts) {
       if (debt.status != 'active') continue;
-      
+
       final remainingAmount = debt.remainingAmount;
       if (remainingAmount <= 0.01) continue;
-      
+
       // Debtor owes money (negative balance)
-      balances[debt.debtorUserId] = (balances[debt.debtorUserId] ?? 0.0) - remainingAmount;
-      
+      balances[debt.debtorUserId] =
+          (balances[debt.debtorUserId] ?? 0.0) - remainingAmount;
+
       // Creditor is owed money (positive balance)
-      balances[debt.creditorUserId] = (balances[debt.creditorUserId] ?? 0.0) + remainingAmount;
+      balances[debt.creditorUserId] =
+          (balances[debt.creditorUserId] ?? 0.0) + remainingAmount;
     }
-    
+
     return balances;
   }
 
   /// Get settlement suggestions to minimize number of transactions
-  static List<Map<String, dynamic>> getSettlementSuggestions(Map<String, double> balances) {
+  static List<Map<String, dynamic>> getSettlementSuggestions(
+    Map<String, double> balances,
+  ) {
     final suggestions = <Map<String, dynamic>>[];
     final debtors = <String, double>{};
     final creditors = <String, double>{};
-    
+
     // Separate debtors and creditors
     balances.forEach((userId, balance) {
       if (balance < -0.01) {
@@ -211,40 +252,48 @@ class BillCalculationService {
         creditors[userId] = balance;
       }
     });
-    
+
     // Create settlement suggestions
     final debtorsList = debtors.entries.toList();
     final creditorsList = creditors.entries.toList();
-    
+
     int debtorIndex = 0;
     int creditorIndex = 0;
-    
-    while (debtorIndex < debtorsList.length && creditorIndex < creditorsList.length) {
+
+    while (debtorIndex < debtorsList.length &&
+        creditorIndex < creditorsList.length) {
       final debtorEntry = debtorsList[debtorIndex];
       final creditorEntry = creditorsList[creditorIndex];
-      
+
       final debtorId = debtorEntry.key;
       final debtorAmount = debtorEntry.value;
       final creditorId = creditorEntry.key;
       final creditorAmount = creditorEntry.value;
-      
-      final settlementAmount = debtorAmount < creditorAmount ? debtorAmount : creditorAmount;
-      
+
+      final settlementAmount =
+          debtorAmount < creditorAmount ? debtorAmount : creditorAmount;
+
       suggestions.add({
         'from': debtorId,
         'to': creditorId,
         'amount': settlementAmount,
       });
-      
+
       // Update remaining amounts
-      debtorsList[debtorIndex] = MapEntry(debtorId, debtorAmount - settlementAmount);
-      creditorsList[creditorIndex] = MapEntry(creditorId, creditorAmount - settlementAmount);
-      
+      debtorsList[debtorIndex] = MapEntry(
+        debtorId,
+        debtorAmount - settlementAmount,
+      );
+      creditorsList[creditorIndex] = MapEntry(
+        creditorId,
+        creditorAmount - settlementAmount,
+      );
+
       // Move to next if current is settled
       if (debtorsList[debtorIndex].value <= 0.01) debtorIndex++;
       if (creditorsList[creditorIndex].value <= 0.01) creditorIndex++;
     }
-    
+
     return suggestions;
   }
 
@@ -258,17 +307,23 @@ class BillCalculationService {
   }) {
     if (selectedMembers.isEmpty) return false;
     if (totalAmount <= 0) return false;
-    
+
     switch (splitMethod) {
       case 'equal':
         return true; // Always valid if we have members and amount
       case 'percentage':
         if (percentages == null) return false;
-        final totalPercentage = percentages.values.fold<double>(0.0, (sum, p) => sum + p);
+        final totalPercentage = percentages.values.fold<double>(
+          0.0,
+          (sum, p) => sum + p,
+        );
         return (totalPercentage - 100.0).abs() <= 0.01;
       case 'custom':
         if (customAmounts == null) return false;
-        final totalCustom = customAmounts.values.fold<double>(0.0, (sum, a) => sum + a);
+        final totalCustom = customAmounts.values.fold<double>(
+          0.0,
+          (sum, a) => sum + a,
+        );
         return (totalCustom - totalAmount).abs() <= 0.01;
       default:
         return false;

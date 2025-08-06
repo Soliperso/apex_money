@@ -42,8 +42,9 @@ class GroupMemberModel {
   factory GroupMemberModel.fromJson(Map<String, dynamic> json) {
     return GroupMemberModel(
       id: json['id']?.toString(),
-      groupId: json['group_id']?.toString() ?? '',
-      userId: json['user_id']?.toString() ?? '',
+      groupId:
+          json['group_id']?.toString() ?? json['groupId']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? json['userId']?.toString() ?? '',
       role: GroupMemberRole.values.firstWhere(
         (e) => e.name == json['role'],
         orElse: () => GroupMemberRole.member,
@@ -52,18 +53,27 @@ class GroupMemberModel {
         (e) => e.name == json['status'],
         orElse: () => GroupMemberStatus.active,
       ),
-      joinedAt: DateTime.parse(
-        json['joined_at'] ?? DateTime.now().toIso8601String(),
-      ),
+      joinedAt:
+          DateTime.tryParse(
+            json['joined_at']?.toString() ?? json['joinedAt']?.toString() ?? '',
+          ) ??
+          DateTime.now(),
       invitedAt:
-          json['invited_at'] != null
-              ? DateTime.parse(json['invited_at'] as String)
+          json['invited_at'] != null || json['invitedAt'] != null
+              ? DateTime.tryParse(
+                json['invited_at']?.toString() ??
+                    json['invitedAt']?.toString() ??
+                    '',
+              )
               : null,
-      invitedBy: json['invited_by']?.toString(),
-      // User details from JOIN query results
-      userName: json['user_name'] as String?,
-      userEmail: json['user_email'] as String?,
-      userAvatar: json['user_avatar'] as String?,
+      invitedBy:
+          json['invited_by']?.toString() ?? json['invitedBy']?.toString(),
+      // User details from JOIN query results - handle both field name variations
+      userName: json['user_name']?.toString() ?? json['userName']?.toString(),
+      userEmail:
+          json['user_email']?.toString() ?? json['userEmail']?.toString(),
+      userAvatar:
+          json['user_avatar']?.toString() ?? json['userAvatar']?.toString(),
     );
   }
 

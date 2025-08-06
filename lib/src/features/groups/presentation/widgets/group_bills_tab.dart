@@ -21,6 +21,8 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
   Map<String, dynamic> _statistics = {};
   bool _isLoading = true;
   String? _error;
+  bool _isShowingFallbackData = false;
+  String? _fallbackMessage;
 
   @override
   void initState() {
@@ -32,25 +34,59 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
     setState(() {
       _isLoading = true;
       _error = null;
+      _isShowingFallbackData = false;
+      _fallbackMessage = null;
     });
 
     try {
-      final futures = await Future.wait([
-        _billService.fetchGroupBills(widget.group.group.id!),
-        _billService.fetchGroupDebts(widget.group.group.id!),
-        _billService.getBillStatistics(widget.group.group.id!),
-      ]);
+      print('Loading bills data for group: ${widget.group.group.id}');
+
+      // Try to use the new methods with fallback support
+      final billsResult = await _billService.fetchGroupBillsWithFallback(
+        widget.group.group.id!,
+      );
+      final debtsResult = await _billService.fetchGroupDebtsWithFallback(
+        widget.group.group.id!,
+      );
+      final statistics = await _billService.getBillStatistics(
+        widget.group.group.id!,
+      );
 
       setState(() {
-        _bills = futures[0] as List<BillModel>;
-        _debts = futures[1] as List<DebtModel>;
-        _statistics = futures[2] as Map<String, dynamic>;
+        _bills = billsResult.data;
+        _debts = debtsResult.data;
+        _statistics = statistics;
         _isLoading = false;
+
+        // Check if any data is from fallback
+        _isShowingFallbackData =
+            billsResult.isFromFallback || debtsResult.isFromFallback;
+        _fallbackMessage = billsResult.message ?? debtsResult.message;
       });
+
+      print(
+        'Successfully loaded ${_bills.length} bills and ${_debts.length} debts',
+      );
+      if (_isShowingFallbackData) {
+        print('Using fallback data: $_fallbackMessage');
+      }
     } catch (e) {
+      print('Error loading bills data: $e');
+
+      // Only set error state for authentication and critical errors
       setState(() {
         _error = e.toString();
         _isLoading = false;
+        _bills = [];
+        _debts = [];
+        _statistics = {
+          'totalBills': 0,
+          'activeBills': 0,
+          'settledBills': 0,
+          'totalBillAmount': 0.0,
+          'activeDebtAmount': 0.0,
+          'averageBillAmount': 0.0,
+        };
       });
     }
   }
@@ -69,6 +105,12 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Fallback data notification
+                if (_isShowingFallbackData) ...[
+                  _buildFallbackNotification(),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+
                 // Bills Summary
                 if (_isLoading) ...[
                   const Center(child: CircularProgressIndicator()),
@@ -103,11 +145,43 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
   Widget _buildErrorWidget() {
     final colorScheme = Theme.of(context).colorScheme;
 
+    // Parse the error message to provide better user feedback
+    String errorTitle = 'Unable to load bills';
+    String errorMessage = _error!;
+    IconData errorIcon = Icons.error_outline;
+
+    if (_error!.contains('HTML instead of JSON')) {
+      errorTitle = 'Server Configuration Error';
+      errorMessage =
+          'The bills service is not properly configured. Please try again later or contact support.';
+      errorIcon = Icons.settings_outlined;
+    } else if (_error!.contains('Authentication expired') ||
+        _error!.contains('Authentication required')) {
+      errorTitle = 'Authentication Required';
+      errorMessage = 'Your session has expired. Please log in again.';
+      errorIcon = Icons.lock_outline;
+    } else if (_error!.contains('Network error') ||
+        _error!.contains('No internet')) {
+      errorTitle = 'Connection Problem';
+      errorMessage = 'Please check your internet connection and try again.';
+      errorIcon = Icons.wifi_off_outlined;
+    } else if (_error!.contains('endpoint not found')) {
+      errorTitle = 'Service Unavailable';
+      errorMessage =
+          'The bills service is temporarily unavailable. Please try again later.';
+      errorIcon = Icons.cloud_off_outlined;
+    } else if (_error!.contains('Permission denied')) {
+      errorTitle = 'Access Denied';
+      errorMessage = 'You don\'t have permission to view bills for this group.';
+      errorIcon = Icons.no_accounts_outlined;
+    }
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -118,10 +192,10 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
-            Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+            Icon(errorIcon, size: 48, color: colorScheme.error),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Unable to load bills',
+              errorTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -130,7 +204,7 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              _error!,
+              errorMessage,
               textAlign: TextAlign.center,
               style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
@@ -145,6 +219,64 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
     );
   }
 
+  Widget _buildFallbackNotification() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              color: colorScheme.primary,
+              size: 20,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Offline Mode',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  if (_fallbackMessage != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      _fallbackMessage!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: _loadBillsData,
+              icon: Icon(Icons.refresh, color: colorScheme.primary, size: 20),
+              tooltip: 'Retry',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBillsSummary() {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -152,9 +284,10 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -316,12 +449,23 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _navigateToAllBills(),
             icon: const Icon(Icons.list),
             label: const Text('View All'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _navigateToActivity(),
+            icon: const Icon(Icons.timeline),
+            label: const Text('Activity'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
@@ -371,9 +515,10 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -437,9 +582,10 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -509,9 +655,10 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -628,5 +775,9 @@ class _GroupBillsTabState extends State<GroupBillsTab> {
 
   void _navigateToDebtDetails() {
     GoRouter.of(context).push('/groups/${widget.group.group.id}/debts');
+  }
+
+  void _navigateToActivity() {
+    GoRouter.of(context).push('/groups/${widget.group.group.id}/activity');
   }
 }

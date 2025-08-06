@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/models.dart';
 import '../providers/groups_provider.dart';
+import '../../../../shared/theme/app_theme.dart';
+import '../../../../shared/theme/app_spacing.dart';
 
 class TransferAdminDialog extends StatefulWidget {
   final GroupWithMembersModel group;
@@ -43,22 +46,28 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
             // Warning Container
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: AppTheme.warningColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(
+                  color: AppTheme.warningColor.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning, color: Colors.orange, size: 20),
+                  const Icon(
+                    Icons.warning,
+                    color: AppTheme.warningColor,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'This will transfer all admin privileges to the selected member. You will become a regular member.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[700],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -75,30 +84,35 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
                 child: Column(
                   children: [
                     Icon(
                       Icons.people_outline,
                       size: 48,
-                      color: Colors.grey[400],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Text(
                       'No eligible members',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'There are no active members to transfer admin role to.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -111,7 +125,7 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
                 style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
 
               // Members list
               Container(
@@ -130,10 +144,7 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: () => context.pop(), child: const Text('Cancel')),
         if (eligibleMembers.isNotEmpty)
           Consumer<GroupsProvider>(
             builder: (context, provider, child) {
@@ -142,7 +153,9 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
                     _selectedMember == null || provider.isUpdating
                         ? null
                         : () => _transferAdmin(context),
-                style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.warningColor,
+                ),
                 child:
                     provider.isUpdating
                         ? const SizedBox(
@@ -172,12 +185,18 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.orange.withOpacity(0.1) : Colors.white,
+          color:
+              isSelected
+                  ? AppTheme.warningColor.withValues(alpha: 0.1)
+                  : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? Colors.orange : Colors.grey[300]!,
+            color:
+                isSelected
+                    ? AppTheme.warningColor
+                    : Theme.of(context).colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -189,9 +208,12 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? Colors.orange : Colors.transparent,
+                color: isSelected ? AppTheme.warningColor : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? Colors.orange : Colors.grey[400]!,
+                  color:
+                      isSelected
+                          ? AppTheme.warningColor
+                          : Theme.of(context).colorScheme.outline,
                   width: 2,
                 ),
               ),
@@ -201,12 +223,12 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
                       : null,
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
 
             // Avatar
             CircleAvatar(
               radius: 20,
-              backgroundColor: Colors.blueAccent,
+              backgroundColor: AppTheme.primaryColor,
               child: Text(
                 (member.userName ?? 'U').substring(0, 1).toUpperCase(),
                 style: const TextStyle(
@@ -216,7 +238,7 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
               ),
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
 
             // Member info
             Expanded(
@@ -228,18 +250,27 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: isSelected ? Colors.orange[800] : Colors.black87,
+                      color:
+                          isSelected
+                              ? AppTheme.warningColor
+                              : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     member.userEmail ?? 'No email',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Joined ${_formatJoinDate(member.joinedAt)}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -286,7 +317,9 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.warningColor,
+                ),
                 child: const Text('Transfer'),
               ),
             ],
@@ -303,20 +336,20 @@ class _TransferAdminDialogState extends State<TransferAdminDialog> {
     );
 
     if (success && mounted) {
-      Navigator.of(context).pop();
+      context.pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Admin role transferred to ${_selectedMember!.userName}',
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successColor,
         ),
       );
     } else if (mounted && provider.hasError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to transfer admin: ${provider.error}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.errorColor,
         ),
       );
     }

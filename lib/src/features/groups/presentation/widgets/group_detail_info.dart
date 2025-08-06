@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../data/models/models.dart';
 import '../../../../shared/theme/app_spacing.dart';
+import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
+import 'group_debt_summary.dart';
 
 class GroupDetailInfo extends StatelessWidget {
   final GroupWithMembersModel group;
@@ -29,6 +31,11 @@ class GroupDetailInfo extends StatelessWidget {
             // Description Section
             if (group.group.description?.isNotEmpty == true)
               _buildDescriptionSection(context),
+
+            const SizedBox(height: 20),
+
+            // Debt Summary Section
+            _buildDebtSummarySection(context),
 
             const SizedBox(height: 20),
 
@@ -61,31 +68,14 @@ class GroupDetailInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Settings tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.info,
-                  size: 18,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Group Information',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Group Information',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -153,7 +143,7 @@ class GroupDetailInfo extends StatelessWidget {
               _buildPropertyChip(
                 Icons.currency_exchange,
                 group.settings?.defaultCurrency ?? 'USD',
-                Colors.green,
+                AppTheme.successColor,
               ),
               const SizedBox(width: 12),
               _buildPropertyChip(
@@ -174,7 +164,9 @@ class GroupDetailInfo extends StatelessWidget {
                 group.group.allowMemberInvites
                     ? 'Members can invite'
                     : 'Admin only invites',
-                group.group.allowMemberInvites ? Colors.green : Colors.orange,
+                group.group.allowMemberInvites
+                    ? AppTheme.successColor
+                    : AppTheme.warningColor,
               ),
             ],
           ),
@@ -230,31 +222,14 @@ class GroupDetailInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching dashboard style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.analytics_rounded,
-                  size: 18,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Group Statistics',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Group Statistics',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -394,31 +369,14 @@ class GroupDetailInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Settings tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.description_rounded,
-                  size: 18,
-                  color: colorScheme.onSecondaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Description',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Description',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -455,31 +413,14 @@ class GroupDetailInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Header with icon - matching Settings tab style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.timeline_rounded,
-                  size: 18,
-                  color: colorScheme.onTertiaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Recent Activity',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
+          // Section Header
+          Text(
+            'Recent Activity',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 16),
           // Placeholder for future activity feed
@@ -519,6 +460,43 @@ class GroupDetailInfo extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebtSummarySection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header
+          Text(
+            'Outstanding Balances',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GroupDebtSummary(group: group),
         ],
       ),
     );

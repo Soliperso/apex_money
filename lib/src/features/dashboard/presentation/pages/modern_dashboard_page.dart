@@ -11,12 +11,15 @@ import '../../data/services/dashboard_sync_service.dart';
 import '../../../../shared/utils/avatar_utils.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/services/user_profile_notifier.dart';
+import '../../../../shared/services/ai_service.dart';
+import '../../../../shared/models/ai_insight_model.dart';
 import '../../../../shared/theme/app_spacing.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 import '../../../../shared/widgets/main_navigation_wrapper.dart';
 import '../../../../shared/widgets/app_settings_menu.dart';
+import '../../../../shared/widgets/notification_action_button.dart';
 
 class ModernDashboardPage extends StatefulWidget {
   const ModernDashboardPage({super.key});
@@ -32,6 +35,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   final GoalService _goalService = GoalService();
   final DashboardSyncService _syncService = DashboardSyncService();
   final UserProfileNotifier _profileNotifier = UserProfileNotifier();
+  AIService? _aiService;
 
   // State variables
   List<Transaction> _recentTransactions = [];
@@ -46,6 +50,11 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   double _totalIncome = 0.0;
   double _totalExpenses = 0.0;
   double _savings = 0.0;
+
+  // AI insights data
+  List<AIInsight> _aiInsights = [];
+  List<AIRecommendation> _aiRecommendations = [];
+  bool _isLoadingAI = false;
 
   // Previous month data for percentage calculation
   double _previousIncome = 0.0;
@@ -62,6 +71,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   @override
   void initState() {
     super.initState();
+    _initializeAIService();
     // Add a small delay to ensure token is stored
     Future.delayed(const Duration(milliseconds: 500), () {
       _loadData();
@@ -82,6 +92,15 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     });
   }
 
+  void _initializeAIService() {
+    try {
+      _aiService = AIService();
+    } catch (e) {
+      print('Warning: AI Service initialization failed: $e');
+      _aiService = null;
+    }
+  }
+
   @override
   void dispose() {
     _syncService.clearRefreshCallback();
@@ -90,6 +109,8 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
 
   Future<void> _loadData() async {
     await Future.wait([_loadTransactions(), _loadUserProfile()]);
+    // Load AI insights after transaction data is available
+    _loadAIInsights();
   }
 
   Future<void> _loadTransactions() async {
@@ -211,6 +232,62 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       setState(() {
         _userName = '';
         _userProfilePicture = null;
+      });
+
+      // Handle authentication failures silently in dashboard
+      // User will see the auth error when they try to access profile directly
+      if (e.toString().contains('No access token found') ||
+          e.toString().contains('unauthorized') ||
+          e.toString().contains('401')) {
+        // Just set default values - don't redirect from dashboard
+        debugPrint(
+          'Authentication issue detected, user will need to re-login from profile page',
+        );
+      }
+    }
+  }
+
+  Future<void> _loadAIInsights() async {
+    if (_aiService == null || _recentTransactions.isEmpty) {
+      setState(() {
+        _aiInsights = [];
+        _aiRecommendations = [];
+        _isLoadingAI = false;
+      });
+      return;
+    }
+
+    try {
+      setState(() {
+        _isLoadingAI = true;
+      });
+
+      // Get all transactions for comprehensive analysis
+      final allTransactions = await _transactionService.fetchTransactions();
+
+      // Generate goal statistics for recommendations
+      final goalStats = await _goalService.getGoalStatistics();
+
+      // Generate AI insights and recommendations in parallel
+      final futures = await Future.wait([
+        _aiService!.generateInsights(allTransactions),
+        _aiService!.generateRecommendations(allTransactions, goalStats),
+      ]);
+
+      final insightResponse = futures[0] as AIInsightResponse;
+      final recommendations = futures[1] as List<AIRecommendation>;
+
+      setState(() {
+        _aiInsights = insightResponse.insights;
+        _aiRecommendations = recommendations;
+        _isLoadingAI = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading AI insights: $e');
+      setState(() {
+        _aiInsights = [];
+        _aiRecommendations = [];
+        _isLoadingAI = false;
       });
     }
   }
@@ -383,13 +460,8 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         ),
       ),
       actions: [
-        // Theme toggle
-        IconButton(
-          onPressed: themeProvider.toggleTheme,
-          icon: Icon(themeProvider.themeModeIcon),
-          tooltip: 'Switch theme',
-          color: iconColor,
-        ),
+        // Notifications
+        NotificationActionButton(iconColor: iconColor),
 
         // Profile
         Padding(
@@ -433,9 +505,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : theme.colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            theme.brightness == Brightness.dark
+                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -444,33 +517,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
       ),
       child: Column(
         children: [
-          // Section Header with icon - matching other screens style
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.waving_hand,
-                  size: 18,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Welcome',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           Row(
             children: [
@@ -483,56 +530,58 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
                       _firstName.isNotEmpty
                           ? 'Good $timeOfDay,\n$_firstName!'
                           : 'Good $timeOfDay!',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                    height: 1.2,
-                  ),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Ready to manage your finances today?',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Ready to manage your finances today?',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Simple Balance Indicator
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Balance',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+              // Simple Balance Indicator
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  CurrencyFormatter.formatForDisplay(_savings),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color:
-                        _savings >= 0
-                            ? AppTheme.successColor
-                            : AppTheme.errorColor,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.5,
                   ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-              ],
-            ),
-          ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Balance',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      CurrencyFormatter.formatForDisplay(_savings),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color:
+                            _savings >= 0
+                                ? AppTheme.successColor
+                                : AppTheme.errorColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -566,7 +615,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'Overview',
+                    'Financial Overview',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
@@ -592,9 +641,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark 
-                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -604,32 +654,7 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           child: Column(
             children: [
               // Section Header with icon - matching other screens style
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    ),
-                    child: Icon(
-                      Icons.analytics_rounded,
-                      size: 18,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Financial Overview',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // First row: Income and Expenses
               Row(
@@ -994,9 +1019,12 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark 
-                  ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                  : theme.colorScheme.surface.withValues(alpha: 0.5),
+              color:
+                  theme.brightness == Brightness.dark
+                      ? theme.colorScheme.surfaceContainer.withValues(
+                        alpha: 0.6,
+                      )
+                      : theme.colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
                 color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -1011,7 +1039,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
                     'Expense',
                     Icons.remove_circle_outline,
                     AppTheme.errorColor,
-                    () => GoRouter.of(context).go('/create-transaction'),
+                    () => GoRouter.of(context).push(
+                      '/create-transaction',
+                      extra: {'transactionType': 'expense'},
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -1021,7 +1052,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
                     'Income',
                     Icons.add_circle_outline,
                     AppTheme.successColor,
-                    () => GoRouter.of(context).go('/create-transaction'),
+                    () => GoRouter.of(context).push(
+                      '/create-transaction',
+                      extra: {'transactionType': 'income'},
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -1148,9 +1182,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark 
-                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -1259,45 +1294,157 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         transaction.type.toLowerCase() == 'income' || transaction.amount > 0;
     final color = isIncome ? AppTheme.successColor : AppTheme.errorColor;
 
-    return Row(
-      children: [
-        // Category icon
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          ),
-          child: Icon(
-            _getTransactionIcon(transaction.category),
-            color: color,
-            size: 16,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-
-        // Transaction description
-        Expanded(
-          child: Text(
-            transaction.description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: theme.colorScheme.onSurface,
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      onLongPress: () => _showTransactionOptions(transaction),
+      child: Row(
+        children: [
+          // Category icon
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            child: Icon(
+              _getTransactionIcon(transaction.category),
+              color: color,
+              size: 16,
+            ),
           ),
-        ),
+          const SizedBox(width: AppSpacing.md),
 
-        // Amount
-        Text(
-          CurrencyFormatter.formatWithSign(transaction.amount),
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
+          // Transaction description
+          Expanded(
+            child: Text(
+              transaction.description,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-      ],
+
+          // Amount
+          Text(
+            CurrencyFormatter.formatWithSign(transaction.amount),
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTransactionOptions(Transaction transaction) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.edit,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: const Text('Edit Transaction'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  // Wait for the bottom sheet to fully close before navigating
+                  await Future.delayed(const Duration(milliseconds: 300));
+                  if (mounted) {
+                    _editTransaction(transaction);
+                  }
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete, color: AppTheme.errorColor),
+                title: const Text('Delete Transaction'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteTransaction(transaction);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _editTransaction(Transaction transaction) {
+    // Navigate to create transaction page with edit mode and pre-filled data
+    if (mounted) {
+      try {
+        GoRouter.of(context).push(
+          '/create-transaction',
+          extra: {'mode': 'edit', 'transaction': transaction},
+        );
+      } catch (e) {
+        print('Error navigating to edit transaction: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Failed to open edit page. Please try again.',
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _deleteTransaction(Transaction transaction) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Transaction'),
+            content: const Text(
+              'Are you sure you want to delete this transaction?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await _transactionService.deleteTransaction(
+                      transaction.id!,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Transaction deleted')),
+                      );
+                      _loadData(); // Refresh the data
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to delete transaction: $e'),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -1393,9 +1540,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark 
-                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -1566,9 +1714,10 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark 
-                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -1582,14 +1731,23 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   }
 
   List<Widget> _buildEnhancedInsightsList(ThemeData theme) {
+    if (_isLoadingAI) {
+      return [_buildAILoadingWidget(theme)];
+    }
+
     if (_categoryBreakdown.isEmpty || _recentTransactions.isEmpty) {
       return [_buildWelcomeInsight(theme)];
     }
 
+    // Use AI insights if available, otherwise fall back to simple insights
+    if (_aiInsights.isNotEmpty) {
+      return _buildAIInsightsList(theme);
+    }
+
+    // Fallback to simple insights
     final insights = <Widget>[];
 
     // Show only 2-3 most relevant insights
-
     // 1. Savings performance (most important)
     if (_totalIncome > 0) {
       insights.add(_buildSimpleSavingsInsight(theme));
@@ -1814,10 +1972,259 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
     );
   }
 
+  Widget _buildAILoadingWidget(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 32,
+            color: theme.colorScheme.primary.withValues(alpha: 0.7),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'AI is analyzing your data...',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'This may take a few moments',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: 200,
+            child: LinearProgressIndicator(
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildAIInsightsList(ThemeData theme) {
+    final insights = <Widget>[];
+
+    // Take only the top 3-4 most important AI insights for dashboard
+    final topInsights = _aiInsights.take(3).toList();
+
+    for (final insight in topInsights) {
+      insights.add(_buildAIInsightTile(theme, insight));
+    }
+
+    // Add one recommendation if available
+    if (_aiRecommendations.isNotEmpty) {
+      final topRecommendation = _aiRecommendations.first;
+      insights.add(_buildAIRecommendationTile(theme, topRecommendation));
+    }
+
+    // Add separators between insights
+    final separatedInsights = <Widget>[];
+    for (int i = 0; i < insights.length; i++) {
+      separatedInsights.add(insights[i]);
+      if (i < insights.length - 1) {
+        separatedInsights.add(_buildInsightSeparator(theme));
+      }
+    }
+
+    return separatedInsights;
+  }
+
+  Widget _buildAIInsightTile(ThemeData theme, AIInsight insight) {
+    Color color;
+    IconData icon;
+
+    switch (insight.type) {
+      case 'positive':
+        color = AppTheme.successColor;
+        icon = Icons.trending_up_rounded;
+        break;
+      case 'negative':
+        color = AppTheme.errorColor;
+        icon = Icons.trending_down_rounded;
+        break;
+      case 'neutral':
+      default:
+        color = AppTheme.infoColor;
+        icon = Icons.insights_rounded;
+        break;
+    }
+
+    // Adjust icon based on severity
+    if (insight.severity == 'high') {
+      if (insight.type == 'negative') {
+        icon = Icons.warning_rounded;
+      } else if (insight.type == 'positive') {
+        icon = Icons.celebration_rounded;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  insight.title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  insight.description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          // Severity indicator
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+            ),
+            child: Text(
+              insight.severity.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAIRecommendationTile(
+    ThemeData theme,
+    AIRecommendation recommendation,
+  ) {
+    Color color;
+    IconData icon;
+
+    switch (recommendation.priority) {
+      case 'high':
+        color = AppTheme.errorColor;
+        icon = Icons.priority_high_rounded;
+        break;
+      case 'medium':
+        color = AppTheme.warningColor;
+        icon = Icons.lightbulb_outline_rounded;
+        break;
+      case 'low':
+      default:
+        color = AppTheme.infoColor;
+        icon = Icons.tips_and_updates_rounded;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        recommendation.title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (recommendation.potentialSavings.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.successColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusXs,
+                          ),
+                        ),
+                        child: Text(
+                          recommendation.potentialSavings,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppTheme.successColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  recommendation.description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   FloatingActionButton _buildFloatingActionButton(ThemeData theme) {
     return FloatingActionButton(
-      onPressed: () => GoRouter.of(context).go('/create-transaction'),
+      onPressed: () => GoRouter.of(context).push('/create-transaction'),
       tooltip: 'Add Transaction',
       child: const Icon(Icons.receipt_long),
     );
@@ -1826,4 +2233,3 @@ class _ModernDashboardPageState extends State<ModernDashboardPage>
   @override
   bool get wantKeepAlive => true;
 }
-

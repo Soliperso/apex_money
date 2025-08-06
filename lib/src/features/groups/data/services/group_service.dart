@@ -1,14 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
-import 'mock_group_data_service.dart';
+import '../../../../shared/config/api_config.dart';
 
-/// Group Service - Handles all group-related operations
-/// Currently using mock data for development - will be replaced with real API calls
+/// Group Service - Handles all group-related operations with Laravel backend
 class GroupService {
-  // Configuration
-  static const bool useMockData = true; // Enable for development
-  static const String baseUrl =
-      'https://srv797850.hstgr.cloud/api/groups'; // Future API endpoint
-
+  String get baseUrl => ApiConfig.apiBaseUrl;
   // Singleton pattern
   static GroupService? _instance;
   GroupService._();
@@ -17,34 +18,32 @@ class GroupService {
     return _instance!;
   }
 
-  // In-memory storage for mock data persistence during session
-  List<GroupWithMembersModel> _groups = [];
-  List<GroupInvitationModel> _invitations = [];
-  bool _isInitialized = false;
+  Future<String?> _getAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('access_token');
+  }
 
-  /// Initialize the service with mock data
-  Future<void> initialize() async {
-    if (_isInitialized) return;
+  /// Get current user ID (email) from shared preferences
+  Future<String?> _getCurrentUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id'); // This is actually the user's email
+  }
 
-    if (useMockData) {
-      await _initializeMockData();
+  /// Get current user ID (email) and throw if not found
+  Future<String> _getRequiredUserId() async {
+    final userId = await _getCurrentUserId();
+    if (userId == null) {
+      throw Exception("User not authenticated - no user email found");
     }
-
-    _isInitialized = true;
+    return userId;
   }
 
-  /// Initialize with mock data for development
-  Future<void> _initializeMockData() async {
-    // Load mock data
-    _groups = MockGroupDataService.generateMockGroups();
-    _invitations = MockGroupDataService.generateMockInvitations();
-
-    // Simulate loading delay
-    await Future.delayed(const Duration(milliseconds: 300));
+  /// Get current user ID synchronously (for provider compatibility)
+  String get currentUserId {
+    // This is a synchronous fallback - the async version should be preferred
+    // UI components should handle the async version properly
+    return 'placeholder_user_id';
   }
-
-  /// Get current user ID (placeholder for real implementation)
-  String get currentUserId => MockGroupDataService.currentUserId;
 
   // ============================================================================
   // GROUP MANAGEMENT METHODS (FR-GRP-001, FR-GRP-003, FR-GRP-007, FR-GRP-008)
@@ -52,38 +51,98 @@ class GroupService {
 
   /// Fetch all groups for the current user
   Future<List<GroupWithMembersModel>> fetchUserGroups() async {
-    await initialize();
-
-    if (useMockData) {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Return groups where current user is a member
-      return _groups.where((groupWithMembers) {
-        return groupWithMembers.isMember(currentUserId);
-      }).toList();
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/groups'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        // Handle empty response
+        if (response.body.trim().isEmpty) {
+          return [];
+        }
+
+        final responseBody = jsonDecode(response.body);
+
+        // Handle different possible response structures
+        List<dynamic> groupsList;
+        if (responseBody is List) {
+          // Direct array response
+          groupsList = responseBody;
+        } else if (responseBody is Map<String, dynamic>) {
+          // Wrapped in object
+          groupsList = responseBody['groups'] ?? responseBody['data'] ?? [];
+        } else if (responseBody == null) {
+          return [];
+        } else {
+          throw Exception(
+            'Invalid response format: expected List or Map, got ${responseBody.runtimeType}',
+          );
+        }
+
+        try {
+          return groupsList.cast<Map<String, dynamic>>().map((group) {
+            try {
+              return GroupWithMembersModel.fromJson(group);
+            } catch (e) {
+              rethrow;
+            }
+          }).toList();
+        } catch (e) {
+          throw Exception('Error parsing groups data: $e');
+        }
+      } else {
+        throw Exception(
+          'Failed to fetch groups: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching groups: $e');
+    }
   }
 
   /// Get a specific group by ID
   Future<GroupWithMembersModel?> getGroupById(String groupId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      try {
-        return _groups.firstWhere((group) => group.group.id == groupId);
-      } catch (e) {
-        return null;
-      }
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/groups/$groupId'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 404) {
+        return null;
+      }
+
+      return _handleResponse<GroupWithMembersModel>(
+        response,
+        (data) => GroupWithMembersModel.fromJson(data['group']),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching group: $e');
+    }
   }
 
   /// Create a new group (FR-GRP-001)
@@ -94,118 +153,61 @@ class GroupService {
     String defaultCurrency = 'USD',
     bool allowMemberInvites = true,
   }) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      final now = DateTime.now();
-      final groupId = MockGroupDataService.generateId();
-
-      final group = GroupModel(
-        id: groupId,
-        name: name,
-        description: description,
-        imageUrl: imageUrl,
-        adminId: currentUserId,
-        createdAt: now,
-        updatedAt: now,
-        defaultCurrency: defaultCurrency,
-        allowMemberInvites: allowMemberInvites,
-      );
-
-      final adminMember = GroupMemberModel(
-        id: MockGroupDataService.generateId(),
-        groupId: groupId,
-        userId: currentUserId,
-        role: GroupMemberRole.admin,
-        status: GroupMemberStatus.active,
-        joinedAt: now,
-        userName: 'John Doe', // Would come from user service
-        userEmail: 'john.doe@example.com',
-      );
-
-      final settings = GroupSettingsModel(
-        groupId: groupId,
-        defaultCurrency: defaultCurrency,
-        allowMemberInvites: allowMemberInvites,
-      );
-
-      final groupWithMembers = GroupWithMembersModel(
-        group: group,
-        members: [adminMember],
-        settings: settings,
-        pendingInvitationsCount: 0,
-      );
-
-      _groups.add(groupWithMembers);
-      return groupWithMembers;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
-  }
+    try {
+      final userId = await _getRequiredUserId();
 
-  /// Send invitation to join a group (FR-GRP-002)
-  Future<GroupInvitationModel> sendInvitation({
-    required String groupId,
-    required String inviteeEmail,
-    String? message,
-  }) async {
-    await initialize();
+      final requestBody = {
+        'name': name,
+        'description': description,
+        'image_url': imageUrl,
+        'default_currency': defaultCurrency,
+        'allow_member_invites': allowMemberInvites,
+        'created_by_user_id': userId,
+      };
 
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 600));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/groups'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: 10));
 
-      final group = await getGroupById(groupId);
-      if (group == null) {
-        throw Exception('Group not found');
-      }
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
 
-      // Check permissions
-      if (!group.canUserInvite(currentUserId)) {
+        // Handle different possible response structures
+        Map<String, dynamic> groupData;
+        if (responseBody is Map<String, dynamic>) {
+          // Check if group data is nested or direct
+          groupData = responseBody['group'] ?? responseBody;
+        } else {
+          throw Exception(
+            'Invalid response format: expected Map, got ${responseBody.runtimeType}',
+          );
+        }
+
+        return GroupWithMembersModel.fromJson(groupData);
+      } else {
         throw Exception(
-          'You do not have permission to invite members to this group',
+          'Failed to create group: ${response.statusCode} - ${response.body}',
         );
       }
-
-      final invitation = GroupInvitationModel(
-        id: MockGroupDataService.generateId(),
-        groupId: groupId,
-        inviteeEmail: inviteeEmail,
-        invitedBy: currentUserId,
-        status: InvitationStatus.pending,
-        createdAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(days: 7)),
-        token: 'invite_${MockGroupDataService.generateId()}',
-        message: message,
-        groupName: group.group.name,
-        inviterName: 'John Doe', // Would come from user service
-        inviterEmail: 'john.doe@example.com',
-      );
-
-      _invitations.add(invitation);
-      return invitation;
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error creating group: $e');
     }
-
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
-  }
-
-  /// Get pending invitations for a group
-  Future<List<GroupInvitationModel>> getGroupInvitations(String groupId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      return _invitations
-          .where((invite) => invite.groupId == groupId && invite.isPending)
-          .toList();
-    }
-
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
   }
 
   /// Update group information (FR-GRP-007)
@@ -217,87 +219,75 @@ class GroupService {
     String? defaultCurrency,
     bool? allowMemberInvites,
   }) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      final groupIndex = _groups.indexWhere((g) => g.group.id == groupId);
-      if (groupIndex == -1) {
-        throw Exception('Group not found');
-      }
-
-      final currentGroup = _groups[groupIndex];
-
-      // Check if user is admin
-      if (!currentGroup.isUserAdmin(currentUserId)) {
-        throw Exception('Only group admins can update group information');
-      }
-
-      final updatedGroup = currentGroup.group.copyWith(
-        name: name,
-        description: description,
-        imageUrl: imageUrl,
-        defaultCurrency: defaultCurrency,
-        allowMemberInvites: allowMemberInvites,
-        updatedAt: DateTime.now(),
-      );
-
-      final updatedSettings = (currentGroup.settings ??
-              GroupSettingsModel(
-                groupId: groupId,
-                defaultCurrency: defaultCurrency ?? 'USD',
-                allowMemberInvites: allowMemberInvites ?? true,
-              ))
-          .copyWith(
-            defaultCurrency: defaultCurrency,
-            allowMemberInvites: allowMemberInvites,
-          );
-
-      final updatedGroupWithMembers = currentGroup.copyWith(
-        group: updatedGroup,
-        settings: updatedSettings,
-      );
-
-      _groups[groupIndex] = updatedGroupWithMembers;
-      return updatedGroupWithMembers;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final Map<String, dynamic> updateData = {};
+      if (name != null) updateData['name'] = name;
+      if (description != null) updateData['description'] = description;
+      if (imageUrl != null) updateData['image_url'] = imageUrl;
+      if (defaultCurrency != null) {
+        updateData['default_currency'] = defaultCurrency;
+      }
+      if (allowMemberInvites != null) {
+        updateData['allow_member_invites'] = allowMemberInvites;
+      }
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/groups/$groupId'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(updateData),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupWithMembersModel>(
+        response,
+        (data) => GroupWithMembersModel.fromJson(data['group']),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error updating group: $e');
+    }
   }
 
   /// Delete a group (FR-GRP-008)
   Future<bool> deleteGroup(String groupId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final groupIndex = _groups.indexWhere((g) => g.group.id == groupId);
-      if (groupIndex == -1) {
-        throw Exception('Group not found');
-      }
-
-      final group = _groups[groupIndex];
-
-      // Check if user is admin
-      if (!group.isUserAdmin(currentUserId)) {
-        throw Exception('Only group admins can delete groups');
-      }
-
-      // Remove the group
-      _groups.removeAt(groupIndex);
-
-      // Remove related invitations
-      _invitations.removeWhere((invite) => invite.groupId == groupId);
-
-      return true;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .delete(
+            Uri.parse('$baseUrl/groups/$groupId'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<bool>(response, (data) => true);
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error deleting group: $e');
+    }
   }
+
+  // ============================================================================
+  // MEMBER MANAGEMENT METHODS (FR-GRP-005, FR-GRP-006)
+  // ============================================================================
 
   /// Add member to group (FR-GRP-005)
   Future<GroupMemberModel> addMemberToGroup({
@@ -307,51 +297,39 @@ class GroupService {
     required String userEmail,
     GroupMemberRole role = GroupMemberRole.member,
   }) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      final groupIndex = _groups.indexWhere((g) => g.group.id == groupId);
-      if (groupIndex == -1) {
-        throw Exception('Group not found');
-      }
-
-      final currentGroup = _groups[groupIndex];
-
-      // Check if user is admin or has permission to add members
-      if (!currentGroup.canUserInvite(currentUserId)) {
-        throw Exception(
-          'You do not have permission to add members to this group',
-        );
-      }
-
-      // Check if user is already a member
-      if (currentGroup.isMember(userId)) {
-        throw Exception('User is already a member of this group');
-      }
-
-      final newMember = GroupMemberModel(
-        id: MockGroupDataService.generateId(),
-        groupId: groupId,
-        userId: userId,
-        role: role,
-        status: GroupMemberStatus.active,
-        joinedAt: DateTime.now(),
-        userName: userName,
-        userEmail: userEmail,
-      );
-
-      final updatedMembers = List<GroupMemberModel>.from(currentGroup.members)
-        ..add(newMember);
-      final updatedGroup = currentGroup.copyWith(members: updatedMembers);
-
-      _groups[groupIndex] = updatedGroup;
-      return newMember;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/groups/$groupId/members'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'user_id': userId,
+              'user_name': userName,
+              'user_email': userEmail,
+              'role': role.name,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupMemberModel>(
+        response,
+        (data) => GroupMemberModel.fromJson(data['member']),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error adding member: $e');
+    }
   }
 
   /// Remove member from group (FR-GRP-006)
@@ -359,45 +337,27 @@ class GroupService {
     required String groupId,
     required String userId,
   }) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final groupIndex = _groups.indexWhere((g) => g.group.id == groupId);
-      if (groupIndex == -1) {
-        throw Exception('Group not found');
-      }
-
-      final currentGroup = _groups[groupIndex];
-
-      // Check if user is admin
-      if (!currentGroup.isUserAdmin(currentUserId)) {
-        throw Exception('Only group admins can remove members');
-      }
-
-      // Cannot remove the admin
-      if (userId == currentGroup.group.adminId) {
-        throw Exception('Cannot remove the group admin');
-      }
-
-      // Check if user is a member
-      if (!currentGroup.isMember(userId)) {
-        throw Exception('User is not a member of this group');
-      }
-
-      final updatedMembers =
-          currentGroup.members
-              .where((member) => member.userId != userId)
-              .toList();
-      final updatedGroup = currentGroup.copyWith(members: updatedMembers);
-
-      _groups[groupIndex] = updatedGroup;
-      return true;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .delete(
+            Uri.parse('$baseUrl/groups/$groupId/members/$userId'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<bool>(response, (data) => true);
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error removing member: $e');
+    }
   }
 
   /// Transfer admin role to another member
@@ -405,272 +365,610 @@ class GroupService {
     required String groupId,
     required String newAdminUserId,
   }) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 600));
-
-      final groupIndex = _groups.indexWhere((g) => g.group.id == groupId);
-      if (groupIndex == -1) {
-        throw Exception('Group not found');
-      }
-
-      final currentGroup = _groups[groupIndex];
-
-      // Check if current user is admin
-      if (!currentGroup.isUserAdmin(currentUserId)) {
-        throw Exception('Only the current admin can transfer admin role');
-      }
-
-      // Check if new admin is a member
-      if (!currentGroup.isMember(newAdminUserId)) {
-        throw Exception('New admin must be a member of the group');
-      }
-
-      // Update group admin
-      final updatedGroup = currentGroup.group.copyWith(
-        adminId: newAdminUserId,
-        updatedAt: DateTime.now(),
-      );
-
-      // Update member roles
-      final updatedMembers =
-          currentGroup.members.map((member) {
-            if (member.userId == newAdminUserId) {
-              return member.copyWith(role: GroupMemberRole.admin);
-            } else if (member.userId == currentUserId) {
-              return member.copyWith(role: GroupMemberRole.member);
-            }
-            return member;
-          }).toList();
-
-      final updatedGroupWithMembers = currentGroup.copyWith(
-        group: updatedGroup,
-        members: updatedMembers,
-      );
-
-      _groups[groupIndex] = updatedGroupWithMembers;
-      return updatedGroupWithMembers;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/groups/$groupId/admin'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'admin_user_id': newAdminUserId}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupWithMembersModel>(
+        response,
+        (data) => GroupWithMembersModel.fromJson(data['group']),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error transferring admin role: $e');
+    }
+  }
+
+  /// Leave a group (for non-admin members)
+  Future<bool> leaveGroup(String groupId) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .delete(
+            Uri.parse('$baseUrl/groups/$groupId/members/self'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<bool>(response, (data) => true);
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error leaving group: $e');
+    }
+  }
+
+  // ============================================================================
+  // ENHANCED MEMBER CRUD OPERATIONS
+  // ============================================================================
+
+  /// Get all members of a specific group
+  Future<List<GroupMemberModel>> getGroupMembers(String groupId) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/groups/$groupId/members'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Handle different possible response structures
+        List<dynamic> membersList;
+        if (responseBody is List) {
+          // Direct array response
+          membersList = responseBody;
+        } else if (responseBody is Map<String, dynamic>) {
+          // Wrapped in object
+          membersList = responseBody['members'] ?? responseBody['data'] ?? [];
+        } else {
+          throw Exception('Invalid response format: expected List or Map');
+        }
+
+        return membersList
+            .cast<Map<String, dynamic>>()
+            .map((member) => GroupMemberModel.fromJson(member))
+            .toList();
+      } else {
+        throw Exception(
+          'Failed to fetch group members: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching group members: $e');
+    }
+  }
+
+  /// Get specific member details by user ID within a group
+  Future<GroupMemberModel?> getGroupMemberById({
+    required String groupId,
+    required String userId,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/groups/$groupId/members/$userId'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 404) {
+        return null; // Member not found
+      }
+
+      return _handleResponse<GroupMemberModel>(
+        response,
+        (data) => GroupMemberModel.fromJson(data['member'] ?? data),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching group member: $e');
+    }
+  }
+
+  /// Update member role within a group
+  Future<GroupMemberModel> updateMemberRole({
+    required String groupId,
+    required String userId,
+    required GroupMemberRole newRole,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/groups/$groupId/members/$userId'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'role': newRole.name}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupMemberModel>(
+        response,
+        (data) => GroupMemberModel.fromJson(data['member'] ?? data),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error updating member role: $e');
+    }
+  }
+
+  /// Update member status within a group
+  Future<GroupMemberModel> updateMemberStatus({
+    required String groupId,
+    required String userId,
+    required GroupMemberStatus newStatus,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/groups/$groupId/members/$userId/status'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'status': newStatus.name}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupMemberModel>(
+        response,
+        (data) => GroupMemberModel.fromJson(data['member'] ?? data),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error updating member status: $e');
+    }
+  }
+
+  /// Get current user's membership details for a specific group
+  Future<GroupMemberModel?> getCurrentUserMembership(String groupId) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        throw Exception("User not authenticated");
+      }
+
+      return await getGroupMemberById(groupId: groupId, userId: currentUserId);
+    } catch (e) {
+      throw Exception('Error fetching current user membership: $e');
+    }
+  }
+
+  /// Check if current user can manage a specific group (is admin)
+  Future<bool> canManageGroup(String groupId) async {
+    try {
+      final membership = await getCurrentUserMembership(groupId);
+      return membership?.canManageGroup ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Bulk invite multiple users to a group by email
+  Future<List<GroupInvitationModel>> bulkInviteMembers({
+    required String groupId,
+    required List<String> emails,
+    String? message,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/groups/$groupId/invitations/bulk'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'emails': emails, 'message': message}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseBody = jsonDecode(response.body);
+
+        List<dynamic> invitationsList;
+        if (responseBody is List) {
+          invitationsList = responseBody;
+        } else if (responseBody is Map<String, dynamic>) {
+          invitationsList =
+              responseBody['invitations'] ?? responseBody['data'] ?? [];
+        } else {
+          throw Exception('Invalid response format: expected List or Map');
+        }
+
+        return invitationsList
+            .cast<Map<String, dynamic>>()
+            .map((invitation) => GroupInvitationModel.fromJson(invitation))
+            .toList();
+      } else {
+        throw Exception(
+          'Failed to send bulk invitations: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error sending bulk invitations: $e');
+    }
   }
 
   // ============================================================================
   // INVITATION MANAGEMENT METHODS (FR-GRP-002)
   // ============================================================================
 
-  /// Get invitations for current user
-  Future<List<GroupInvitationModel>> getUserInvitations() async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      // In a real implementation, this would filter by user email
-      // For now, return all pending invitations
-      return _invitations.where((invite) => invite.isPending).toList();
+  /// Send invitation to join a group (FR-GRP-002)
+  Future<GroupInvitationModel> sendInvitation({
+    required String groupId,
+    required String inviteeEmail,
+    String? message,
+  }) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/groups/$groupId/invitations'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'invitee_email': inviteeEmail,
+              'message': message,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupInvitationModel>(
+        response,
+        (data) => GroupInvitationModel.fromJson(data['invitation']),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error sending invitation: $e');
+    }
+  }
+
+  /// Get pending invitations for a group
+  Future<List<GroupInvitationModel>> getGroupInvitations(String groupId) async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/groups/$groupId/invitations'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Handle different possible response structures
+        List<dynamic> invitationsList;
+        if (responseBody is List) {
+          // Direct array response
+          invitationsList = responseBody;
+        } else if (responseBody is Map<String, dynamic>) {
+          // Wrapped in object
+          invitationsList =
+              responseBody['invitations'] ?? responseBody['data'] ?? [];
+        } else {
+          throw Exception('Invalid response format: expected List or Map');
+        }
+
+        return invitationsList
+            .cast<Map<String, dynamic>>()
+            .map((invitation) => GroupInvitationModel.fromJson(invitation))
+            .toList();
+      } else {
+        throw Exception(
+          'Failed to fetch group invitations: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching invitations: $e');
+    }
+  }
+
+  /// Get invitations for current user
+  Future<List<GroupInvitationModel>> getUserInvitations() async {
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
+    }
+
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/invitations'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Handle different possible response structures
+        List<dynamic> invitationsList;
+        if (responseBody is List) {
+          // Direct array response
+          invitationsList = responseBody;
+        } else if (responseBody is Map<String, dynamic>) {
+          // Wrapped in object
+          invitationsList =
+              responseBody['invitations'] ?? responseBody['data'] ?? [];
+        } else {
+          throw Exception('Invalid response format: expected List or Map');
+        }
+
+        return invitationsList
+            .cast<Map<String, dynamic>>()
+            .map((invitation) => GroupInvitationModel.fromJson(invitation))
+            .toList();
+      } else {
+        throw Exception(
+          'Failed to fetch user invitations: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching user invitations: $e');
+    }
   }
 
   /// Accept an invitation
   Future<GroupWithMembersModel> acceptInvitation(String invitationId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      final invitationIndex = _invitations.indexWhere(
-        (invite) => invite.id == invitationId,
-      );
-      if (invitationIndex == -1) {
-        throw Exception('Invitation not found');
-      }
-
-      final invitation = _invitations[invitationIndex];
-
-      if (!invitation.isPending) {
-        throw Exception('Invitation is no longer valid');
-      }
-
-      if (invitation.isExpired) {
-        throw Exception('Invitation has expired');
-      }
-
-      // Update invitation status
-      final updatedInvitation = invitation.copyWith(
-        status: InvitationStatus.accepted,
-        respondedAt: DateTime.now(),
-      );
-      _invitations[invitationIndex] = updatedInvitation;
-
-      // Add user to group
-      await addMemberToGroup(
-        groupId: invitation.groupId,
-        userId: currentUserId,
-        userName: 'John Doe', // Would come from user service
-        userEmail: invitation.inviteeEmail,
-      );
-
-      // Get updated group with members
-      final groupWithMembers = await getGroupById(invitation.groupId);
-      if (groupWithMembers == null) {
-        throw Exception('Failed to get updated group information');
-      }
-
-      return groupWithMembers;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/invitations/$invitationId/accept'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<GroupWithMembersModel>(
+        response,
+        (data) => GroupWithMembersModel.fromJson(data['group']),
+      );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error accepting invitation: $e');
+    }
   }
 
   /// Decline an invitation
   Future<bool> declineInvitation(String invitationId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 400));
-
-      final invitationIndex = _invitations.indexWhere(
-        (invite) => invite.id == invitationId,
-      );
-      if (invitationIndex == -1) {
-        throw Exception('Invitation not found');
-      }
-
-      final invitation = _invitations[invitationIndex];
-
-      if (!invitation.isPending) {
-        throw Exception('Invitation is no longer valid');
-      }
-
-      // Update invitation status
-      final updatedInvitation = invitation.copyWith(
-        status: InvitationStatus.declined,
-        respondedAt: DateTime.now(),
-      );
-      _invitations[invitationIndex] = updatedInvitation;
-
-      return true;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/invitations/$invitationId/decline'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<bool>(response, (data) => true);
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error declining invitation: $e');
+    }
   }
 
   /// Cancel an invitation (by inviter)
   Future<bool> cancelInvitation(String invitationId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 400));
-
-      final invitationIndex = _invitations.indexWhere(
-        (invite) => invite.id == invitationId,
-      );
-      if (invitationIndex == -1) {
-        throw Exception('Invitation not found');
-      }
-
-      final invitation = _invitations[invitationIndex];
-
-      // Check if current user is the one who sent the invitation or group admin
-      final group = await getGroupById(invitation.groupId);
-      if (group == null) {
-        throw Exception('Group not found');
-      }
-
-      if (invitation.invitedBy != currentUserId &&
-          !group.isUserAdmin(currentUserId)) {
-        throw Exception(
-          'You can only cancel invitations you sent or if you are a group admin',
-        );
-      }
-
-      if (!invitation.isPending) {
-        throw Exception('Can only cancel pending invitations');
-      }
-
-      // Update invitation status
-      final updatedInvitation = invitation.copyWith(
-        status: InvitationStatus.cancelled,
-        respondedAt: DateTime.now(),
-      );
-      _invitations[invitationIndex] = updatedInvitation;
-
-      return true;
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
+    try {
+      final response = await http
+          .delete(
+            Uri.parse('$baseUrl/invitations/$invitationId'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
+
+      return _handleResponse<bool>(response, (data) => true);
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error canceling invitation: $e');
+    }
   }
+
+  // ============================================================================
+  // UTILITY METHODS
+  // ============================================================================
 
   /// Get group statistics
   Future<Map<String, dynamic>> getGroupStats(String groupId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      final group = await getGroupById(groupId);
-      if (group == null) {
-        throw Exception('Group not found');
-      }
-
-      final pendingInvitations = await getGroupInvitations(groupId);
-
-      return {
-        'memberCount': group.members.length,
-        'pendingInvitations': pendingInvitations.length,
-        'adminId': group.group.adminId,
-        'createdAt': group.group.createdAt,
-        'settings': group.settings?.toJson() ?? {},
-      };
+    final token = await _getAuthToken();
+    if (token == null) {
+      throw Exception("Authentication required");
     }
 
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
-  }
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/groups/$groupId/stats'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
 
-  /// Leave a group (for non-admin members)
-  Future<bool> leaveGroup(String groupId) async {
-    await initialize();
-
-    if (useMockData) {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final group = await getGroupById(groupId);
-      if (group == null) {
-        throw Exception('Group not found');
-      }
-
-      // Admin cannot leave, must transfer admin role first
-      if (group.isUserAdmin(currentUserId)) {
-        throw Exception(
-          'Group admin cannot leave. Please transfer admin role first.',
-        );
-      }
-
-      // Remove current user from group
-      return await removeMemberFromGroup(
-        groupId: groupId,
-        userId: currentUserId,
+      return _handleResponse<Map<String, dynamic>>(
+        response,
+        (data) => data['stats'] as Map<String, dynamic>,
       );
+    } on SocketException {
+      throw Exception('No internet connection');
+    } on TimeoutException {
+      throw Exception('Request timeout - please try again');
+    } catch (e) {
+      throw Exception('Error fetching group stats: $e');
     }
-
-    // TODO: Real API implementation
-    throw UnimplementedError('Real API not implemented yet');
   }
 
-  /// Clear all data (useful for testing)
-  Future<void> clearAllData() async {
-    _groups.clear();
-    _invitations.clear();
-    _isInitialized = false;
+  // ============================================================================
+  // PRIVATE HELPER METHODS
+  // ============================================================================
+
+  /// Centralized response handler with comprehensive error handling
+  Future<T> _handleResponse<T>(
+    http.Response response,
+    T Function(Map<String, dynamic>) parser,
+  ) async {
+    try {
+      switch (response.statusCode) {
+        case 200:
+        case 201:
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          return parser(data);
+        case 204:
+          // No content - return success for boolean operations
+          if (T == bool) {
+            return true as T;
+          }
+          throw Exception('Unexpected empty response');
+        case 401:
+          throw Exception('Authentication expired - please login again');
+        case 403:
+          throw Exception('Permission denied - insufficient access rights');
+        case 404:
+          throw Exception('Resource not found');
+        case 422:
+          final errorData = jsonDecode(response.body);
+          final errors =
+              errorData['errors'] ??
+              errorData['message'] ??
+              'Validation failed';
+          throw Exception('Validation error: $errors');
+        case 429:
+          throw Exception(
+            'Too many requests - please wait before trying again',
+          );
+        case 500:
+        case 502:
+        case 503:
+        case 504:
+          throw Exception('Server error - please try again later');
+        default:
+          throw Exception(
+            'Unexpected error (${response.statusCode}): ${response.body}',
+          );
+      }
+    } on FormatException {
+      throw Exception('Invalid server response format');
+    }
   }
 }

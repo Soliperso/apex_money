@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/groups_provider.dart';
 import '../../data/models/models.dart';
 import '../../../../shared/theme/app_spacing.dart';
+import '../../../../shared/theme/app_theme.dart';
 
 class GroupInvitationsBanner extends StatelessWidget {
   const GroupInvitationsBanner({Key? key}) : super(key: key);
@@ -24,9 +26,10 @@ class GroupInvitationsBanner extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: AppSpacing.lg),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark 
-                ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                : theme.colorScheme.surface.withValues(alpha: 0.5),
+            color:
+                theme.brightness == Brightness.dark
+                    ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -46,7 +49,9 @@ class GroupInvitationsBanner extends StatelessWidget {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         child: Icon(
                           Icons.mail_rounded,
@@ -66,13 +71,18 @@ class GroupInvitationsBanner extends StatelessWidget {
                     ],
                   ),
                   TextButton(
-                    onPressed: () => _showInvitationsDialog(context, pendingInvitations),
+                    onPressed:
+                        () =>
+                            _showInvitationsDialog(context, pendingInvitations),
                     child: Text(
                       'View All',
                       style: TextStyle(
-                        color: theme.brightness == Brightness.dark 
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.primary.withValues(alpha: 0.9),
+                        color:
+                            theme.brightness == Brightness.dark
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.primary.withValues(
+                                  alpha: 0.9,
+                                ),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -89,23 +99,26 @@ class GroupInvitationsBanner extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                      : theme.colorScheme.primary.withValues(alpha: 0.12),
+                  color:
+                      theme.brightness == Brightness.dark
+                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                          : theme.colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   border: Border.all(
-                    color: theme.brightness == Brightness.dark
-                        ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                        : theme.colorScheme.primary.withValues(alpha: 0.4),
+                    color:
+                        theme.brightness == Brightness.dark
+                            ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                            : theme.colorScheme.primary.withValues(alpha: 0.4),
                     width: 1,
                   ),
                 ),
                 child: Text(
                   '${pendingInvitations.length} pending invitation${pendingInvitations.length != 1 ? 's' : ''}',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.brightness == Brightness.dark
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.primary.withValues(alpha: 0.9),
+                    color:
+                        theme.brightness == Brightness.dark
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.primary.withValues(alpha: 0.9),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -132,9 +145,12 @@ class GroupInvitationsBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color:
+            theme.brightness == Brightness.dark
+                ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.4,
+                ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
@@ -227,9 +243,15 @@ class GroupInvitationsBanner extends StatelessWidget {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16),
                           elevation: 2,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.8)
-                              : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainer
+                                      .withValues(alpha: 0.8)
+                                  : Theme.of(
+                                    context,
+                                  ).colorScheme.surface.withValues(alpha: 0.5),
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: Column(
@@ -296,15 +318,25 @@ class GroupInvitationsBanner extends StatelessWidget {
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).brightness == Brightness.dark
-                                          ? Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-                                          : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                                      color:
+                                          Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHigh
+                                                  .withValues(alpha: 0.7)
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHighest
+                                                  .withValues(alpha: 0.4),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       invitation.message!,
                                       style:
-                                          Theme.of(context).textTheme.bodyMedium,
+                                          Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
                                       maxLines: 3,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -338,7 +370,7 @@ class GroupInvitationsBanner extends StatelessWidget {
                                   children: [
                                     TextButton(
                                       onPressed: () {
-                                        Navigator.of(context).pop();
+                                        context.pop();
                                         _declineInvitation(context, invitation);
                                       },
                                       child: const Text('Decline'),
@@ -349,7 +381,7 @@ class GroupInvitationsBanner extends StatelessWidget {
                                           invitation.isExpired
                                               ? null
                                               : () {
-                                                Navigator.of(context).pop();
+                                                context.pop();
                                                 _acceptInvitation(
                                                   context,
                                                   invitation,
@@ -371,7 +403,7 @@ class GroupInvitationsBanner extends StatelessWidget {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Close'),
               ),
             ],
@@ -405,7 +437,7 @@ class GroupInvitationsBanner extends StatelessWidget {
       final success = await provider.acceptInvitation(invitation.id!);
 
       if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
+        context.pop(); // Close loading dialog
 
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -425,11 +457,11 @@ class GroupInvitationsBanner extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
+        context.pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error accepting invitation: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
@@ -476,7 +508,7 @@ class GroupInvitationsBanner extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to decline invitation: ${provider.error}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }

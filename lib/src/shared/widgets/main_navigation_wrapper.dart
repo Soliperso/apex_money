@@ -66,10 +66,11 @@ class MainNavigationWrapper extends StatelessWidget {
                 icon: Icon(Icons.flag_rounded),
                 label: 'Goals',
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.group_rounded),
-                label: 'Groups',
-              ),
+              // GROUPS TAB COMMENTED OUT
+              // BottomNavigationBarItem(
+              //   icon: Icon(Icons.receipt_long),
+              //   label: 'Split',
+              // ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.insights_rounded),
                 label: 'AI Insights',
@@ -98,10 +99,11 @@ class MainNavigationWrapper extends StatelessWidget {
       case 2:
         context.go('/goals');
         break;
-      case 3:
-        context.go('/groups');
-        break;
-      case 4:
+      // GROUPS NAVIGATION COMMENTED OUT
+      // case 3:
+      //   context.go('/groups');
+      //   break;
+      case 3: // AI Insights moved from index 4 to 3
         context.go('/ai-insights');
         break;
     }

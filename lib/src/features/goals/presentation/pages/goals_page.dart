@@ -8,6 +8,9 @@ import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_gradient_background.dart';
 import '../../../../shared/widgets/main_navigation_wrapper.dart';
 import '../../../../shared/widgets/app_settings_menu.dart';
+import '../../../../shared/widgets/skeleton_loader.dart';
+import '../../../../shared/widgets/error_boundary.dart';
+import '../../../../shared/services/haptic_service.dart';
 import '../../../../shared/theme/app_spacing.dart';
 import '../../../../shared/theme/theme_provider.dart';
 import '../../../../shared/theme/app_theme.dart';
@@ -26,6 +29,13 @@ class _GoalsPageState extends State<GoalsPage> {
   @override
   void initState() {
     super.initState();
+    _loadGoals();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh goals when returning to this page
     _loadGoals();
   }
 
@@ -60,11 +70,17 @@ class _GoalsPageState extends State<GoalsPage> {
             content: Text('Are you sure you want to delete "${goal.name}"?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () {
+                  HapticService().buttonPress();
+                  Navigator.of(context).pop(false);
+                },
                 child: const Text('Cancel'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () {
+                  HapticService().heavy();
+                  Navigator.of(context).pop(true);
+                },
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(context).colorScheme.error,
                 ),
@@ -80,6 +96,7 @@ class _GoalsPageState extends State<GoalsPage> {
         _loadGoals(); // Refresh the list
 
         if (mounted) {
+          HapticService().success();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Goal deleted successfully'),
@@ -89,6 +106,7 @@ class _GoalsPageState extends State<GoalsPage> {
         }
       } catch (e) {
         if (mounted) {
+          HapticService().error();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to delete goal: $e'),
@@ -130,11 +148,15 @@ class _GoalsPageState extends State<GoalsPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  HapticService().buttonPress();
+                  Navigator.of(context).pop();
+                },
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: () async {
+                  HapticService().buttonPress();
                   final newAmount = double.tryParse(controller.text);
                   if (newAmount != null && newAmount >= 0) {
                     try {
@@ -143,6 +165,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       _loadGoals(); // Refresh the list
 
                       if (mounted) {
+                        HapticService().success();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Goal progress updated!'),
@@ -153,6 +176,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       }
                     } catch (e) {
                       if (mounted) {
+                        HapticService().error();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Failed to update progress: $e'),
@@ -254,26 +278,7 @@ class _GoalsPageState extends State<GoalsPage> {
           color: titleColor,
         ),
       ),
-      actions: [
-        // Theme toggle
-        IconButton(
-          onPressed: themeProvider.toggleTheme,
-          icon: Icon(themeProvider.themeModeIcon),
-          tooltip: 'Switch theme',
-          color: iconColor,
-        ),
-
-        // Refresh
-        IconButton(
-          onPressed: _loadGoals,
-          icon: const Icon(Icons.refresh),
-          color: iconColor,
-          tooltip: 'Refresh Goals',
-        ),
-
-        // Settings Menu
-        AppSettingsMenu(iconColor: iconColor),
-      ],
+      actions: [],
     );
   }
 
@@ -282,38 +287,36 @@ class _GoalsPageState extends State<GoalsPage> {
       future: _goalsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildSkeletonLoader();
         } else if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: AppTheme.errorColor),
-                const SizedBox(height: 16),
-                Text(
-                  'Error: ${snapshot.error}',
-                  style: TextStyle(color: AppTheme.errorColor),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loadGoals,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
+          return ErrorBoundary(
+            errorTitle: 'Unable to Load Goals',
+            errorMessage:
+                'There was a problem loading your goals. Please try again.',
+            onRetry: () {
+              HapticService().buttonPress();
+              _loadGoals();
+            },
+            child: const SizedBox.shrink(),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Container(
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark 
-                  ? Theme.of(context).colorScheme.surfaceContainer.withValues(alpha: 0.6)
-                  : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                      : Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -349,7 +352,12 @@ class _GoalsPageState extends State<GoalsPage> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
-              return _buildGoalCard(snapshot.data![index]);
+              return withErrorBoundary(
+                _buildGoalCard(snapshot.data![index]),
+                errorTitle: 'Goal Display Error',
+                errorMessage: 'Unable to display this goal.',
+                onRetry: _loadGoals,
+              );
             },
           );
         }
@@ -357,10 +365,87 @@ class _GoalsPageState extends State<GoalsPage> {
     );
   }
 
+  Widget _buildSkeletonLoader() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Statistics card skeleton
+          if (_statistics == null)
+            SkeletonCard(
+              height: 160, // Reduced height
+              children: [
+                SkeletonText(
+                  height: 18,
+                  width: MediaQuery.of(context).size.width * 0.4,
+                ),
+                const SizedBox(height: 12),
+                const SkeletonText(height: 60, width: double.infinity),
+                const SizedBox(height: 12),
+                const Row(
+                  children: [
+                    Expanded(child: SkeletonText(height: 40)),
+                    SizedBox(width: 12),
+                    Expanded(child: SkeletonText(height: 40)),
+                  ],
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+          // Goal cards skeleton
+          ...List.generate(
+            2,
+            (index) => // Reduced from 3 to 2
+                SkeletonCard(
+              height: 140, // Reduced height
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: SkeletonText(
+                        height: 20,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 1,
+                      child: SkeletonText(
+                        height: 16,
+                        width: MediaQuery.of(context).size.width * 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const SkeletonText(height: 6, width: double.infinity),
+                const SizedBox(height: 10),
+                const Row(
+                  children: [
+                    Expanded(child: SkeletonText(height: 14)),
+                    SizedBox(width: 12),
+                    Expanded(child: SkeletonText(height: 14)),
+                    SizedBox(width: 12),
+                    Expanded(child: SkeletonText(height: 14)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: AppSpacing.massive,
+          ), // Extra space for bottom nav
+        ],
+      ),
+    );
+  }
 
   FloatingActionButton _buildFloatingActionButton(ThemeData theme) {
     return FloatingActionButton(
-      onPressed: () => context.go('/create-goal'),
+      onPressed: () {
+        HapticService().buttonPress();
+        context.go('/create-goal');
+      },
       tooltip: 'Create Goal',
       child: const Icon(Icons.flag),
     );
@@ -369,101 +454,282 @@ class _GoalsPageState extends State<GoalsPage> {
   Widget _buildStatisticsCard() {
     final theme = Theme.of(context);
     final stats = _statistics!;
+    final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark 
-            ? theme.colorScheme.surfaceContainer.withValues(alpha: 0.6)
-            : theme.colorScheme.surface.withValues(alpha: 0.5),
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                : colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Goal Overview',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Goal Overview',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Text(
+                  '${stats['totalGoals']} Goals',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Enhanced Progress Overview with visual progress bar
+          _buildProgressOverview(stats),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Enhanced stat grid with progress indicators
           Row(
             children: [
               Expanded(
-                child: _buildStatItem(
-                  'Total Goals',
-                  stats['totalGoals'].toString(),
-                  Icons.flag,
-                  Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
+                child: _buildEnhancedStatItem(
                   'Completed',
                   stats['completedGoals'].toString(),
                   Icons.check_circle,
                   AppTheme.successColor,
+                  stats['totalGoals'] > 0
+                      ? stats['completedGoals'] / stats['totalGoals']
+                      : 0.0,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: _buildStatItem(
+                child: _buildEnhancedStatItem(
                   'Active',
                   stats['activeGoals'].toString(),
                   Icons.trending_up,
-                  Colors.orange,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Overdue',
-                  stats['overdueGoals'].toString(),
-                  Icons.warning,
-                  Colors.red,
+                  AppTheme.infoColor,
+                  stats['totalGoals'] > 0
+                      ? stats['activeGoals'] / stats['totalGoals']
+                      : 0.0,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.1)
-                      : Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(8),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildEnhancedStatItem(
+                  'Overdue',
+                  stats['overdueGoals'].toString(),
+                  Icons.warning,
+                  AppTheme.errorColor,
+                  stats['totalGoals'] > 0
+                      ? stats['overdueGoals'] / stats['totalGoals']
+                      : 0.0,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _buildEnhancedStatItem(
+                  'On Track',
+                  (stats['activeGoals'] - stats['overdueGoals']).toString(),
+                  Icons.schedule,
+                  AppTheme.warningColor,
+                  stats['totalGoals'] > 0
+                      ? (stats['activeGoals'] - stats['overdueGoals']) /
+                          stats['totalGoals']
+                      : 0.0,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressOverview(Map<String, dynamic> stats) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final overallProgress = stats['overallProgress'] as double;
+    final totalSavedAmount = stats['totalSavedAmount'] as double;
+    final totalTargetAmount = stats['totalTargetAmount'] as double;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.primaryContainer.withValues(alpha: 0.2)
+                : colorScheme.primaryContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Overall Progress',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                '${(overallProgress * 100).toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+            child: LinearProgressIndicator(
+              value: overallProgress,
+              minHeight: 8,
+              backgroundColor: colorScheme.outlineVariant.withValues(
+                alpha: 0.3,
+              ),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                overallProgress >= 1.0
+                    ? AppTheme.successColor
+                    : colorScheme.primary,
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total Progress',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Saved: ${CurrencyFormatter.format(totalSavedAmount)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
                 ),
-                Text(
-                  '${(stats['overallProgress'] * 100).toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              Text(
+                'Target: ${CurrencyFormatter.format(totalTargetAmount)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
                 ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedStatItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    double progress,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color:
+            theme.brightness == Brightness.dark
+                ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.5)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.xs),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: colorScheme.outlineVariant.withValues(
+                alpha: 0.2,
+              ),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
         ],
@@ -523,14 +789,17 @@ class _GoalsPageState extends State<GoalsPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color:
+            theme.brightness == Brightness.dark
+                ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.7)
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.4,
+                ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color:
               goal.isCompleted
-                  ? Colors.green.withValues(alpha: 0.3)
+                  ? AppTheme.successColor.withValues(alpha: 0.3)
                   : goal.isOverdue
                   ? AppTheme.errorColor.withValues(alpha: 0.3)
                   : theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
@@ -576,6 +845,7 @@ class _GoalsPageState extends State<GoalsPage> {
                   ),
                 PopupMenuButton<String>(
                   onSelected: (value) {
+                    HapticService().selection();
                     switch (value) {
                       case 'edit':
                         context.push('/create-goal', extra: goal);
@@ -614,11 +884,15 @@ class _GoalsPageState extends State<GoalsPage> {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, size: 18, color: Colors.red),
+                              Icon(
+                                Icons.delete,
+                                size: 18,
+                                color: AppTheme.errorColor,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 'Delete',
-                                style: TextStyle(color: Colors.red),
+                                style: TextStyle(color: AppTheme.errorColor),
                               ),
                             ],
                           ),
@@ -694,7 +968,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       style: TextStyle(
                         color:
                             goal.isCompleted
-                                ? Colors.green
+                                ? AppTheme.successColor
                                 : goal.isOverdue
                                 ? AppTheme.errorColor
                                 : theme.colorScheme.primary,
@@ -774,12 +1048,12 @@ class _GoalsPageState extends State<GoalsPage> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: AppTheme.successColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.link, color: Colors.green, size: 16),
+                    Icon(Icons.link, color: AppTheme.successColor, size: 16),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Column(
@@ -788,7 +1062,7 @@ class _GoalsPageState extends State<GoalsPage> {
                           Text(
                             'Auto-updates from:',
                             style: TextStyle(
-                              color: Colors.green[700]!,
+                              color: AppTheme.successColor,
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                             ),
@@ -797,7 +1071,7 @@ class _GoalsPageState extends State<GoalsPage> {
                           Text(
                             goal.linkedCategories.join(', '),
                             style: TextStyle(
-                              color: Colors.green[600]!,
+                              color: AppTheme.successColor,
                               fontSize: 12,
                             ),
                           ),
@@ -812,14 +1086,14 @@ class _GoalsPageState extends State<GoalsPage> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: AppTheme.warningColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.warning_outlined,
-                      color: Colors.orange,
+                      color: AppTheme.warningColor,
                       size: 16,
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -827,7 +1101,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       child: Text(
                         'No categories linked - add income to categories to auto-update',
                         style: TextStyle(
-                          color: Colors.orange[700]!,
+                          color: AppTheme.warningColor,
                           fontSize: 11,
                         ),
                       ),
@@ -842,4 +1116,3 @@ class _GoalsPageState extends State<GoalsPage> {
     );
   }
 }
-

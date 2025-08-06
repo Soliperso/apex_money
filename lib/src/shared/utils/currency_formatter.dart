@@ -35,7 +35,7 @@ class CurrencyFormatter {
   /// Format currency in compact form for large numbers (e.g., $1.2K, $1.5M)
   static String formatCompact(double amount) {
     final absAmount = amount.abs();
-    
+
     if (absAmount >= 1000000) {
       return _compactFormatter.format(amount);
     } else if (absAmount >= 1000) {
@@ -49,7 +49,7 @@ class CurrencyFormatter {
   /// Uses compact format for large numbers, whole numbers for smaller amounts
   static String formatForDisplay(double amount) {
     final absAmount = amount.abs();
-    
+
     if (absAmount >= 1000000) {
       return formatCompact(amount);
     } else if (absAmount >= 10000) {
@@ -63,7 +63,7 @@ class CurrencyFormatter {
   /// Small amounts show cents, larger amounts are rounded
   static String formatSmart(double amount) {
     final absAmount = amount.abs();
-    
+
     if (absAmount >= 1000) {
       return formatWhole(amount);
     } else {

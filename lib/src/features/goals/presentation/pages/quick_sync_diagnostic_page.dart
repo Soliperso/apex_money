@@ -4,6 +4,7 @@ import '../../data/models/goal_model.dart';
 import '../../data/services/goal_transaction_sync_service.dart';
 import '../../../transactions/data/models/transaction_model.dart';
 import '../../../transactions/data/services/transaction_service.dart';
+import '../../../../shared/theme/app_theme.dart';
 
 class QuickSyncDiagnosticPage extends StatefulWidget {
   const QuickSyncDiagnosticPage({super.key});
@@ -25,7 +26,7 @@ class _QuickSyncDiagnosticPageState extends State<QuickSyncDiagnosticPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quick Sync Diagnostic'),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: AppTheme.errorColor,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -33,7 +34,7 @@ class _QuickSyncDiagnosticPageState extends State<QuickSyncDiagnosticPage> {
         child: Column(
           children: [
             Card(
-              color: Colors.red.shade50,
+              color: AppTheme.errorColor.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -41,7 +42,7 @@ class _QuickSyncDiagnosticPageState extends State<QuickSyncDiagnosticPage> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.bug_report, color: Colors.red.shade700),
+                        Icon(Icons.bug_report, color: AppTheme.errorColor),
                         const SizedBox(width: 8),
                         const Text(
                           'Goal-Transaction Sync Issues',
@@ -63,7 +64,7 @@ class _QuickSyncDiagnosticPageState extends State<QuickSyncDiagnosticPage> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _runQuickDiagnostic,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade700,
+                          backgroundColor: AppTheme.errorColor,
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('🚨 Run Quick Diagnostic'),
@@ -75,7 +76,7 @@ class _QuickSyncDiagnosticPageState extends State<QuickSyncDiagnosticPage> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _testCarGoalSpecifically,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
+                          backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('🚗 Test Car Goal Specifically'),
@@ -87,7 +88,7 @@ class _QuickSyncDiagnosticPageState extends State<QuickSyncDiagnosticPage> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _createTestTransaction,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade700,
+                          backgroundColor: AppTheme.successColor,
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('💸 Create Test Transaction'),

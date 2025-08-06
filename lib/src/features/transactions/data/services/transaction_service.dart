@@ -4,9 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart' as transaction_model;
 import '../../../goals/data/services/goal_transaction_sync_service.dart';
+import '../../../../shared/config/api_config.dart';
 
 class TransactionService {
-  final String baseUrl = "https://srv797850.hstgr.cloud/api/transactions";
+  String get baseUrl => "${ApiConfig.apiBaseUrl}/transactions";
   final bool useMockData = false; // Disabled mock data - using real backend
   final bool fallbackToMockOnError =
       false; // Disabled fallback - force real authentication
@@ -571,37 +572,37 @@ class TransactionService {
     final testCases = [
       {
         'name': 'Basic transactions endpoint',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions',
+        'url': baseUrl,
         'params': <String, String>{},
       },
       {
         'name': 'Transactions with select fields only',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions',
+        'url': baseUrl,
         'params': {'select': 'id,description,amount,date'},
       },
       {
         'name': 'Transactions with explicit no relationships',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions',
+        'url': baseUrl,
         'params': {'without': 'bill,bills,relationships'},
       },
       {
         'name': 'Transactions with limit=1',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions',
+        'url': baseUrl,
         'params': {'limit': '1'},
       },
       {
         'name': 'Transactions with paginate=false',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions',
+        'url': baseUrl,
         'params': {'paginate': 'false', 'per_page': '1'},
       },
       {
         'name': 'Raw transactions endpoint',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions/raw',
+        'url': '$baseUrl/raw',
         'params': <String, String>{},
       },
       {
         'name': 'Single transaction by ID',
-        'url': 'https://srv797850.hstgr.cloud/api/transactions/1',
+        'url': '$baseUrl/1',
         'params': <String, String>{},
       },
     ];
@@ -671,7 +672,7 @@ class TransactionService {
 
       final response = await http
           .post(
-            Uri.parse('https://srv797850.hstgr.cloud/api/transactions'),
+            Uri.parse(baseUrl),
             headers: {
               "Authorization": "Bearer $token",
               "Content-Type": "application/json",
@@ -708,7 +709,7 @@ class TransactionService {
     try {
       final response = await http
           .get(
-            Uri.parse('https://srv797850.hstgr.cloud/api/user'),
+            Uri.parse('${ApiConfig.apiBaseUrl}/user'),
             headers: {
               "Authorization": "Bearer $token",
               "Content-Type": "application/json",

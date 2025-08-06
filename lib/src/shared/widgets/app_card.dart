@@ -29,18 +29,22 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Widget card = Card(
       elevation: elevation ?? AppElevation.card,
       margin: margin ?? EdgeInsets.zero,
-      color: backgroundColor ?? 
-        (filled ? theme.colorScheme.surfaceContainer : theme.colorScheme.surface),
+      color:
+          backgroundColor ??
+          (filled
+              ? theme.colorScheme.surfaceContainer
+              : theme.colorScheme.surface),
       shape: RoundedRectangleBorder(
-        borderRadius: borderRadius ?? BorderRadius.circular(AppSpacing.cardRadius),
-        side: border != null ? border!.top : BorderSide(
-          color: theme.colorScheme.outlineVariant,
-          width: 1,
-        ),
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(AppSpacing.cardRadius),
+        side:
+            border != null
+                ? border!.top
+                : BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: Padding(
         padding: padding ?? const EdgeInsets.all(AppSpacing.cardPadding),
@@ -51,7 +55,8 @@ class AppCard extends StatelessWidget {
     if (onTap != null) {
       return InkWell(
         onTap: onTap,
-        borderRadius: borderRadius ?? BorderRadius.circular(AppSpacing.cardRadius),
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(AppSpacing.cardRadius),
         child: card,
       );
     }
@@ -82,7 +87,7 @@ class FinancialCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AppCard(
       onTap: onTap,
       child: Column(
@@ -154,7 +159,7 @@ class StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AppCard(
       onTap: onTap,
       backgroundColor: color.withValues(alpha: 0.05),

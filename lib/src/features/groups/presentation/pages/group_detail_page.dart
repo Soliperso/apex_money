@@ -11,8 +11,6 @@ import '../../../../shared/widgets/app_gradient_background.dart';
 import '../../../../shared/theme/app_spacing.dart';
 import '../widgets/invite_member_dialog.dart';
 import '../widgets/edit_group_dialog.dart';
-import '../widgets/group_bills_tab.dart';
-import '../../../../shared/widgets/app_gradient_background.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -32,7 +30,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadGroup();
   }
 
@@ -87,26 +85,31 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         Icon(
                           Icons.group,
                           size: 16,
-                          color: isDark 
-                              ? colorScheme.onSurface.withValues(alpha: 0.7)
-                              : Colors.white.withValues(alpha: 0.7),
+                          color:
+                              isDark
+                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.7),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'Groups',
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark 
-                                ? colorScheme.onSurface.withValues(alpha: 0.7)
-                                : Colors.white.withValues(alpha: 0.7),
+                            color:
+                                isDark
+                                    ? colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    )
+                                    : Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
                         Icon(
                           Icons.chevron_right,
                           size: 16,
-                          color: isDark 
-                              ? colorScheme.onSurface.withValues(alpha: 0.7)
-                              : Colors.white.withValues(alpha: 0.7),
+                          color:
+                              isDark
+                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.7),
                         ),
                       ],
                     ),
@@ -155,26 +158,31 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         Icon(
                           Icons.group,
                           size: 16,
-                          color: isDark 
-                              ? colorScheme.onSurface.withValues(alpha: 0.7)
-                              : Colors.white.withValues(alpha: 0.7),
+                          color:
+                              isDark
+                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.7),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'Groups',
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark 
-                                ? colorScheme.onSurface.withValues(alpha: 0.7)
-                                : Colors.white.withValues(alpha: 0.7),
+                            color:
+                                isDark
+                                    ? colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    )
+                                    : Colors.white.withValues(alpha: 0.7),
                           ),
                         ),
                         Icon(
                           Icons.chevron_right,
                           size: 16,
-                          color: isDark 
-                              ? colorScheme.onSurface.withValues(alpha: 0.7)
-                              : Colors.white.withValues(alpha: 0.7),
+                          color:
+                              isDark
+                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
+                                  : Colors.white.withValues(alpha: 0.7),
                         ),
                       ],
                     ),
@@ -256,7 +264,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         Icons.arrow_back,
                         color: isDark ? colorScheme.onSurface : Colors.white,
                       ),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => context.go('/groups'),
                       tooltip: 'Back to Groups',
                     ),
                     title: Column(
@@ -269,26 +277,35 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                             Icon(
                               Icons.group,
                               size: 16,
-                              color: isDark 
-                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
-                                  : Colors.white.withValues(alpha: 0.7),
+                              color:
+                                  isDark
+                                      ? colorScheme.onSurface.withValues(
+                                        alpha: 0.7,
+                                      )
+                                      : Colors.white.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               'Groups',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isDark 
-                                    ? colorScheme.onSurface.withValues(alpha: 0.7)
-                                    : Colors.white.withValues(alpha: 0.7),
+                                color:
+                                    isDark
+                                        ? colorScheme.onSurface.withValues(
+                                          alpha: 0.7,
+                                        )
+                                        : Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                             Icon(
                               Icons.chevron_right,
                               size: 16,
-                              color: isDark 
-                                  ? colorScheme.onSurface.withValues(alpha: 0.7)
-                                  : Colors.white.withValues(alpha: 0.7),
+                              color:
+                                  isDark
+                                      ? colorScheme.onSurface.withValues(
+                                        alpha: 0.7,
+                                      )
+                                      : Colors.white.withValues(alpha: 0.7),
                             ),
                           ],
                         ),
@@ -298,7 +315,8 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: isDark ? colorScheme.onSurface : Colors.white,
+                            color:
+                                isDark ? colorScheme.onSurface : Colors.white,
                           ),
                         ),
                       ],
@@ -412,6 +430,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                           ),
                         ),
                         Tab(
+                          text: 'History',
+                          icon: Icon(
+                            Icons.history,
+                            color:
+                                isDark ? colorScheme.onSurface : Colors.white,
+                          ),
+                        ),
+                        Tab(
                           text: 'Settings',
                           icon: Icon(
                             Icons.settings,
@@ -435,6 +461,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
                   // Bills Tab
                   GroupBillsTab(group: _group!),
+
+                  // Settlement History Tab
+                  _SettlementHistoryTab(groupId: widget.groupId),
 
                   // Settings Tab
                   GroupSettingsPanel(group: _group!),
@@ -483,12 +512,12 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
 
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.deleteGroup(_group!.group.id!);
@@ -532,12 +561,12 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  context.pop();
 
                   final provider = context.read<GroupsProvider>();
                   final success = await provider.leaveGroup(_group!.group.id!);
@@ -565,6 +594,208 @@ class _GroupDetailPageState extends State<GroupDetailPage>
               ),
             ],
           ),
+    );
+  }
+}
+
+/// Settlement History Tab Widget
+class _SettlementHistoryTab extends StatelessWidget {
+  final String groupId;
+
+  const _SettlementHistoryTab({required this.groupId});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.history,
+                  color: colorScheme.onSecondaryContainer,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Settlement History',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Description
+          Text(
+            'View all payment settlements and transaction history for this group.',
+            style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 24),
+
+          // Navigate to Full History Button
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color:
+                  theme.brightness == Brightness.dark
+                      ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                      : colorScheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.timeline, size: 48, color: colorScheme.primary),
+                const SizedBox(height: 12),
+                Text(
+                  'View Complete History',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'See all payments, settlements, and transaction details with filtering options.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => context.go('/groups/$groupId/settlements'),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Open Settlement History'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Quick Stats Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color:
+                  theme.brightness == Brightness.dark
+                      ? colorScheme.surfaceContainer.withValues(alpha: 0.6)
+                      : colorScheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quick Stats',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildStatRow(
+                  context,
+                  Icons.check_circle_outline,
+                  'Settled Bills',
+                  'View payment history and completed transactions',
+                  colorScheme,
+                ),
+                const SizedBox(height: 8),
+                _buildStatRow(
+                  context,
+                  Icons.filter_list,
+                  'Advanced Filtering',
+                  'Filter by date, member, amount, and status',
+                  colorScheme,
+                ),
+                const SizedBox(height: 8),
+                _buildStatRow(
+                  context,
+                  Icons.timeline,
+                  'Payment Timeline',
+                  'Chronological view of all group settlements',
+                  colorScheme,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatRow(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+    ColorScheme colorScheme,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

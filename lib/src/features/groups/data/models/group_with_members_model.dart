@@ -19,8 +19,12 @@ class GroupWithMembersModel {
 
   /// Factory constructor from JSON with nested members data
   factory GroupWithMembersModel.fromJson(Map<String, dynamic> json) {
+    // Handle cases where the JSON structure might be different
+    // If 'group' key doesn't exist, treat the entire json as the group data
+    final groupData = json['group'] as Map<String, dynamic>? ?? json;
+
     return GroupWithMembersModel(
-      group: GroupModel.fromJson(json['group']),
+      group: GroupModel.fromJson(groupData),
       members:
           (json['members'] as List<dynamic>?)
               ?.map((memberJson) => GroupMemberModel.fromJson(memberJson))
@@ -30,7 +34,13 @@ class GroupWithMembersModel {
           json['settings'] != null
               ? GroupSettingsModel.fromJson(json['settings'])
               : null,
-      pendingInvitationsCount: json['pending_invitations_count'] as int?,
+      // Handle both field name variations for pending invitations count
+      pendingInvitationsCount:
+          json['pending_invitations_count'] as int? ??
+          json['pendingInvitationsCount'] as int? ??
+          (json['statistics']
+                  as Map<String, dynamic>?)?['pendingInvitationsCount']
+              as int?,
     );
   }
 
